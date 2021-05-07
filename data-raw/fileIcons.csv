@@ -1,0 +1,20 @@
+ext,fileIcon,bg_clr
+"zip,gz,rar,7z,cab,iso",file-archive,#d7ccc8
+mp3,file-audio,#d1c4e9
+"xlsx,xlsm,xlsb,xls",file-excel,#c8e6c9
+pdf,file-pdf,#ffcdd2
+"jpg,gif,png,tiff,tif,jpeg,jpe,bmp",file-picture,#d1c4e9
+"ppt,pptx,pptm",file-powerpoint,#ffccbc
+"txt,log",file-text,#c8e6c9
+"mp4,wmv,flv",file-video,#d1c4e9
+"docx,doc,rtf,pp7m,docm,",file-word,#b3e5fc
+"msg,p7m",envelope,#ffecb3
+"lnk,url",external-link-square-alt,#bbdefb
+"db,accdb",database,#c8e6c9
+csv,file-csv,#c8e6c9
+"htm,html,js,pas,css,dll,sbx,sbn,dat",file-code,#f0f4c3
+"R,py",scroll,#c8e6c9
+"dbf,ent,shp, shx, prj",map-marked-alt,#c8e6c9
+exe,rocket,#c8e6c9
+vhd,hdd,#c8e6c9
+"json,rda",cube,#c8e6c9

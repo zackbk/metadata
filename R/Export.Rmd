@@ -1,0 +1,30 @@
+---
+title: "Export"
+output: html_document
+params: 
+  outputSearchOptions: "NA"
+  outputMain: "NA"
+  outputParent: "NA"
+  outputSummary: "NA"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+author: Zekarias Kedida, Shared Drive Tool
+---
+# Files
+```{r include = TRUE, echo = FALSE}
+params$outputMain
+```
+
+# Folders
+```{r include = TRUE, echo = FALSE}
+params$outputParent
+```
+
+### Summary
+```{r include = TRUE, echo = FALSE}
+params$outputSummary
+```
+
+### Search Options
+```{r include = TRUE, echo = FALSE}
+params$outputSearchOptions
+```

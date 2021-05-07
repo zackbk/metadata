@@ -15,7 +15,13 @@ SearchModel <- function(x,input) {
        !(Type %in% input$fileOrFolder),
      filter := FALSE ]
   x[ (filter == TRUE) & 
-       !(DateWritten >= input$dateFrom & DateWritten <= input$dateTo),
+       !(DateCreated >= input$createdFrom & DateCreated <= input$createdTo),
+     filter := FALSE]
+  x[ (filter == TRUE) & 
+       !(DateWritten >= input$writtenFrom & DateWritten <= input$writtenTo),
+     filter := FALSE]
+  x[ (filter == TRUE) & 
+       !(DateAccessed >= input$accessedFrom & DateAccessed <= input$accessedTo),
      filter := FALSE]
   if (length(input$searchString) > 0) {
     if(input$searchString != "") {
@@ -27,14 +33,19 @@ SearchModel <- function(x,input) {
         filter := FALSE]
     }
   }
-  if (length(input$folderDepth) > 0) {
+  if (length(input$minFolderDepth) > 0) {
     x[(filter == TRUE) & 
-        !(Level >= input$folderDepth),
+        !(Level >= input$minFolderDepth),
       filter := FALSE ]
+  }
+  if (length(input$Owner) > 0 ) {
+    x[(filter == TRUE) & 
+        !(tolower(Owner) %in% tolower(input$Owner)),
+      filter := FALSE]
   }
   if (length(input$extensionName) > 0) {
     x[(filter == TRUE) & 
-        !(Extension %in% input$extensionName),
+        !(tolower(Extension) %in% tolower(input$extensionName) ), # extensions are always searched in lower case.
       filter := FALSE]
   }
   if (length(input$parentString) > 0) {
@@ -48,9 +59,5 @@ SearchModel <- function(x,input) {
       
     }
   }
-  if(input$arrangeBy != "") {
-    return( x[order(x[[input$arrangeBy]],decreasing = input$order)] )
-  } else {
-    return(x)  
-  }
+  return(x)
 }

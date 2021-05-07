@@ -10,25 +10,33 @@
 
 #shell.exec(file = "data-raw/ListAllShareDriveFoldersFiles.bat")
 
-
+# initialise libraries
+library(bit64)
+library(stringr)
+library(data.table)
+library(plyr)
+library(dplyr)
 # Step 1: Clean Data
-for(wca in c("W","C","A")) { # last written, last created, last accessed
+WCA <- c("W_022020","C_102020","A_052021") # A is accessed, we don't typically use.
+for(wca in WCA) { # last written, last created, last accessed
   cat(wca)
   if(file.exists(paste0("//ncr.int.ec.gc.ca/shares/O/OGAED/FileFolderListv",wca,".txt"))) {
     O2_original <- base::readLines(paste0("//ncr.int.ec.gc.ca/shares/O/OGAED/FileFolderListv",wca,".txt"))  
+  } else if(file.exists(paste0("data-raw/temp/FileFolderListv",wca,".txt"))) {
+    O2_original <- base::readLines(paste0("data-raw/temp/FileFolderListv",wca,".txt"))
   } else{
-    O2_original <- base::readLines(paste0("data-raw/FileFolderListv",wca,".txt"))
+    O2_original <- base::readLines(paste0("data-raw/archive/FileFolderListv",wca,".txt"))
   }
   O2 <- O2_original[O2_original!=""]
   
   O2Dir <- substring(O2,15,nchar(O2))[substring(O2,1,14)==" Directory of "] #extract all directory names
   O2Dir <- stringr::str_replace_all(string = O2Dir, pattern = fixed("H:\\"),replacement= stringr::fixed( "\\\\ncr.int.ec.gc.ca\\shares\\O\\OGAED\\")) 
-  O2DirCount <- (data.frame("z"= O2) %>% mutate(mydir=cumsum(substring(z,1,14)==" Directory of ")))$mydir # link files to directories
+  O2DirCount <- (data.frame("z"= O2) %>% dplyr::mutate(mydir=cumsum(substring(z,1,14)==" Directory of ")))$mydir # link files to directories
   O2NodeID <- 1:length(O2Dir)
   
   O2Property <- substring(O2,1,1)==" " # if first letter is "blank" then it's either "directory of" or lists file numbers
-  O2DirNums <- as.numeric(substring(O2[O2Property][str_which(O2[O2Property],"File\\(s\\)")],1,17))  # num of files in directory  (NOT in Sub directories)
-  O2DirSize <- as.numeric(substring(O2[O2Property][str_which(O2[O2Property],"File\\(s\\)")],26,40)) # size of files in directory (NOT in Sub directories)
+  O2DirNums <- as.numeric(substring(O2[O2Property][stringr::str_which(O2[O2Property],"File\\(s\\)")],1,17))  # num of files in directory  (NOT in Sub directories)
+  O2DirSize <- as.numeric(substring(O2[O2Property][stringr::str_which(O2[O2Property],"File\\(s\\)")],26,40)) # size of files in directory (NOT in Sub directories)
   
   
   O2FileSubDirInfo <- O2[!O2Property] # lines that might be files
@@ -69,7 +77,7 @@ for(wca in c("W","C","A")) { # last written, last created, last accessed
   
   
   
-  O2Data <- rbind.fill(data.frame("parentName" = O2Dir[O2FileParentID],
+  O2Data <- plyr::rbind.fill(data.frame("parentName" = O2Dir[O2FileParentID],
                                   "parentID" = O2FileParentID,
                                   "DateTime" = O2FileDateTime,
                                   "Owner" = O2FileOwner,
@@ -98,9 +106,10 @@ for(wca in c("W","C","A")) { # last written, last created, last accessed
              "TotalFileCount" = 0,
              "pathString" = O2SubDirFullPath)) # Must be cumulative (will be recursively done in next step)
   
-  names(O2Data)[names(O2Data) %in% "DateTime"] <- ifelse(wca=="W","DateWritten",ifelse(wca=="C","DateCreated","DateAccessed"))
-  O2Data$DateIndexed <- Sys.time() # NEW
-  data.table::fwrite(O2Data,paste0("data-raw/clean_datav",wca,".csv"))
+  DateTime <- ifelse(substring(wca,1,1)=="W","DateWritten",ifelse(substring(wca,1,1)=="C","DateCreated","DateAccessed"))
+  names(O2Data)[names(O2Data) %in% "DateTime"] <- DateTime
+  O2Data[,paste0(DateTime,"IndexDate")] <- substring(wca,3) #Sys.time() # NEW
+  data.table::fwrite(O2Data,paste0("data-raw/temp/clean_datav",substring(wca,1,1),".csv"))
   
   rm(O2_original,O2,O2Dir,O2DirCount,O2NodeID,O2Property,O2DirNums,O2DirSize,O2FileSubDirInfo,O2ParentID,
      O2IsFile,O2FileInfo,O2SubDirInfo,O2FileParentID,O2SubDirParentID,O2FileDateTime,O2FileBytes,O2FileOwner,
@@ -131,44 +140,63 @@ RecursiveSum <- function(x) {
   print(paste("start",Sys.time()))
   for(j in seq(max(x$Level) - 1, min(x$Level),-1)) { # start from lowest level work up.
     cat(paste('\r',max(x$Level)-1,"=>",j,"=>",min(x$Level),": started" ))
-    x <- x %>% group_by(`parentID`) %>%
-      mutate("TotalByteSize" = sum(ifelse(`parentID` == x$parentID[x$Level==(j+1)], x$TotalByteSize[x$Level==(j+1)], 0 ), na.rm=T ) ,
+    x <- x %>% dplyr::group_by(`parentID`) %>%
+      dplyr::mutate("TotalByteSize" = sum(ifelse(`parentID` == x$parentID[x$Level==(j+1)], x$TotalByteSize[x$Level==(j+1)], 0 ), na.rm=T ) ,
              "TotalFileCount" = sum(ifelse(`parentID` == x$parentID[x$Level==(j+1)], x$TotalFileCount[x$Level==(j+1)], 0), na.rm=T ) ,
              "AvgByteSize" = mean(ifelse(`parentID` == x$parentID[x$Level==(j+1)], x$TotalFileCount[x$Level==(j+1)], 0), na.rm=T ),
              "AvgCharacterLength" = mean(ifelse(`parentID` == x$parentID[x$Level==(j+1)], x$TotalFileCount[x$Level==(j+1)], 0), na.rm=T )
-      ) %>% ungroup()
+      ) %>% dplyr::ungroup()
     cat(paste('\r',max(x$Level)-1,"=>",j,"=>",min(x$Level),": fin'd" ))
   }
   print(paste("finish", Sys.time()))
   return(x)
 }
-#O2Clean <- data.table::fread("data-raw/clean_data.csv")
+#O2Clean <- data.table::fread("data-raw/temp/clean_data.csv")
 #temp <- RecursiveSum(O2Clean)
 #usethis::use_data(O2Clean, overwrite = TRUE)
 
-# step 3
+# step 3 : Rerun this and subsequent steps to update file icons etc.
 
-## code to prepare `T2` dataset goes here
 toDateTime <- function(x) {
   a <- as.POSIXct(x = strptime( x, format = "%d/%m/%Y  %I:%M %p"))
   a[is.na(a)] <- as.POSIXct(x = strptime( x[is.na(a)], format = "%Y-%m-%d %H:%M:%S"))
-  a
+  return(a)
 }
 
 # Step 4: Combine multiple time-stamps
 
 #  Summarise at a level of your choice
-O2CleanW <- data.table::fread("data-raw/clean_datavW.csv",data.table = F)
-O2CleanC <- data.table::fread("data-raw/clean_datavC.csv",data.table = F)
-# O2CleanA <- data.table::fread("data-raw/clean_datavA.csv",data.table = F)
-#O2CleanA$DateAccessed <- toDate(O2CleanA$DateAccessed)
-# #O2Clean <- inner_join(inner_join(O2CleanC,O2CleanW),O2CleanA)
-O2Clean <- inner_join(O2CleanC,O2CleanW)
-data.table::fwrite(O2Clean,"data-raw/clean_datavCW.csv")
-O2Clean <- data.table::fread("data-raw/clean_datavCW.csv", data.table = TRUE)
+colClass <- list("character" = c("parentName","DateWritten","DateCreated","DateAccessed","Owner","Name","Extension","Type","pathString"),
+                 "integer" = c("parentID","ID","CharacterLength","Level","TotalFileCount","DirectFileCount"),
+                 "numeric" = c("TotalByteSize","DirectByteSize"))
+
+O2List <- list(
+  data.table::fread("data-raw/temp/clean_datavW.csv",data.table = T, colClasses = colClass),
+  data.table::fread("data-raw/temp/clean_datavC.csv",data.table = T, colClasses = colClass),
+  data.table::fread("data-raw/temp/clean_datavA.csv",data.table = T, colClasses = colClass))
+onCols <- names(O2List[[1]])[names(O2List[[1]]) %in% names(O2List[[2]]) & names(O2List[[1]]) %in% names(O2List[[3]])]
+onOrder <- order(c(dim(O2List[[1]])[1],dim(O2List[[2]])[1],dim(O2List[[3]])[1]))
+
+O2Clean <- O2List[[onOrder[1]]][O2List[[onOrder[2]]][O2List[[onOrder[3]]],on= c(onCols)],on= c(onCols)]
+
+
+
+#data.table::fwrite(O2Clean,"data-raw/temp/clean_datavCWA.csv")
+O2Clean[, DateAccessed := toDateTime(O2Clean$DateAccessed)]
 O2Clean[, DateWritten := toDateTime(O2Clean$DateWritten)]
 O2Clean[, DateCreated := toDateTime(O2Clean$DateCreated)]
+O2Clean[, Owner := gsub("\\\\","/",Owner)]
 
 
+
+source("data-raw/data_fct_addIcon.R")
+O2Clean <- addIcon(O2Clean)
+data.table::setcolorder(O2Clean, 
+                        neworder = c("link","Owner","Extension","Level","DateCreated","DateAccessed","DateWritten",
+                                     "TotalByteSize","DirectByteSize","DirectFileCount","CharacterLength",
+                                     "pathString",
+                                     "parentName","ID",'parentID',
+                                     "TotalFileCount",'bg_clr','ico','ext'
+                        ))
 usethis::use_data(O2Clean, overwrite = TRUE)
 

@@ -17,6 +17,7 @@
 ## Add one line by package you want to add as dependency
 #usethis::use_package("thinkr" )
 usethis::use_package("DT")
+usethis::use_package("magrittr")
 usethis::use_package("data.tree")
 usethis::use_package("data.table")
 usethis::use_package("plyr")
@@ -30,7 +31,10 @@ usethis::use_package("class") # simple regression, graphics
 usethis::use_package("rclipboard")
 usethis::use_package("scales")
 usethis::use_package("shinymaterial")
-
+usethis::use_package("shinyalert")
+usethis::use_package("bit64") # for integer bytes to work properly
+# usethis::use_package("ggiraph")
+# usethis::use_package("plotly")
 ## Add modules ----
 ## Create a module infrastructure in R/
 golem::add_module( name = "1_body" ) # Name of the module
@@ -40,6 +44,7 @@ golem::add_module( name = "3_view" ) # Name of the module
 ## Add helper functions ----
 ## Creates ftc_* and utils_*
 golem::add_fct( "SearchModel" ,open = TRUE) 
+golem::add_fct( "SortView"   ,open = TRUE)
 golem::add_fct( "helpers" ) 
 golem::add_utils( "helpers" )
 
@@ -51,9 +56,10 @@ golem::add_css_file( "custom" )
 
 ## Add internal datasets ----
 ## If you have data in your package
-usethis::use_data_raw( name = "1_O2Clean", open = TRUE ) 
-usethis::use_data_raw( name = "2_T2", open = TRUE ) 
-
+usethis::use_data_raw( name = "1_O2Clean", open = TRUE )
+usethis::use_data_raw( name = "2_T2", open = TRUE )
+usethis::use_data_raw( name = "3_fileIcons", open = TRUE )
+usethis::use_data_raw( name = "4_O2Names", open = TRUE )
 ## Tests ----
 ## Add one line by test you want to create
 usethis::use_test( "app" )
