@@ -10,22 +10,32 @@
 
 #shell.exec(file = "data-raw/ListAllShareDriveFoldersFiles.bat")
 
-# initialise libraries
+
+
+GetO2 <- function(myDir = NULL, FName = "FildeFolderListv", WCA = NULL, temploc = NULL) {
+  # initialise libraries
 library(bit64)
 library(stringr)
 library(data.table)
 library(plyr)
 library(dplyr)
+  if(is.null(temploc)) temploc <- gsub("\\\\","/",tempdir())
+  if(is.null(WCA)){
+    WCA <- paste0(c("W","C","A"),sprintf("_%02d%4d",data.table::month(Sys.Date()), data.table::year(Sys.Date())))
+  }
+  
 # Step 1: Clean Data
-WCA <- c("W_022020","C_102020","A_052021") # A is accessed, we don't typically use.
+ # A is accessed, we don't typically use.
 for(wca in WCA) { # last written, last created, last accessed
   cat(wca)
-  if(file.exists(paste0("//ncr.int.ec.gc.ca/shares/O/OGAED/FileFolderListv",wca,".txt"))) {
-    O2_original <- base::readLines(paste0("//ncr.int.ec.gc.ca/shares/O/OGAED/FileFolderListv",wca,".txt"))  
-  } else if(file.exists(paste0("data-raw/temp/FileFolderListv",wca,".txt"))) {
-    O2_original <- base::readLines(paste0("data-raw/temp/FileFolderListv",wca,".txt"))
+  if(!is.null(myDir)){
+    O2_original <- base::readLines(paste0(myDir,FName,wca,".txt"))  
+  } else if(file.exists(paste0("//ncr.int.ec.gc.ca/shares/O/OGAED/",FName,wca,".txt"))) {
+    O2_original <- base::readLines(paste0("//ncr.int.ec.gc.ca/shares/O/OGAED/",FName,wca,".txt"))  
+  } else if(file.exists(paste0(temploc,"/",FName,wca,".txt"))) {
+    O2_original <- base::readLines(paste0(temploc,"/",FName,wca,".txt"))
   } else{
-    O2_original <- base::readLines(paste0("data-raw/archive/FileFolderListv",wca,".txt"))
+    O2_original <- base::readLines(paste0("data-raw/archive/",FName,wca,".txt"))
   }
   O2 <- O2_original[O2_original!=""]
   
@@ -109,7 +119,7 @@ for(wca in WCA) { # last written, last created, last accessed
   DateTime <- ifelse(substring(wca,1,1)=="W","DateWritten",ifelse(substring(wca,1,1)=="C","DateCreated","DateAccessed"))
   names(O2Data)[names(O2Data) %in% "DateTime"] <- DateTime
   O2Data[,paste0(DateTime,"IndexDate")] <- substring(wca,3) #Sys.time() # NEW
-  data.table::fwrite(O2Data,paste0("data-raw/temp/clean_datav",substring(wca,1,1),".csv"))
+  data.table::fwrite(O2Data,paste0(temploc,"/clean_datav",substring(wca,1,1),".csv"))
   
   rm(O2_original,O2,O2Dir,O2DirCount,O2NodeID,O2Property,O2DirNums,O2DirSize,O2FileSubDirInfo,O2ParentID,
      O2IsFile,O2FileInfo,O2SubDirInfo,O2FileParentID,O2SubDirParentID,O2FileDateTime,O2FileBytes,O2FileOwner,
@@ -151,7 +161,7 @@ RecursiveSum <- function(x) {
   print(paste("finish", Sys.time()))
   return(x)
 }
-#O2Clean <- data.table::fread("data-raw/temp/clean_data.csv")
+#O2Clean <- data.table::fread(temploc,"/clean_data.csv")
 #temp <- RecursiveSum(O2Clean)
 #usethis::use_data(O2Clean, overwrite = TRUE)
 
@@ -170,24 +180,36 @@ colClass <- list("character" = c("parentName","DateWritten","DateCreated","DateA
                  "integer" = c("parentID","ID","CharacterLength","Level","TotalFileCount","DirectFileCount"),
                  "numeric" = c("TotalByteSize","DirectByteSize"))
 
-O2List <- list(
-  data.table::fread("data-raw/temp/clean_datavW.csv",data.table = T, colClasses = colClass),
-  data.table::fread("data-raw/temp/clean_datavC.csv",data.table = T, colClasses = colClass),
-  data.table::fread("data-raw/temp/clean_datavA.csv",data.table = T, colClasses = colClass))
-onCols <- names(O2List[[1]])[names(O2List[[1]]) %in% names(O2List[[2]]) & names(O2List[[1]]) %in% names(O2List[[3]])]
-onOrder <- order(c(dim(O2List[[1]])[1],dim(O2List[[2]])[1],dim(O2List[[3]])[1]))
+O2Tables <- list.files(path = temploc,pattern = "clean_datav",full.names = TRUE)
 
-O2Clean <- O2List[[onOrder[1]]][O2List[[onOrder[2]]][O2List[[onOrder[3]]],on= c(onCols)],on= c(onCols)]
+for(i in seq_along(O2Tables)) {
+  if(i == 1){
+    O2Clean <- fread(O2Tables[i], data.table = T, colClasses = colClass)
+  } else {
+    O2temp <- fread(O2Tables[i], data.table = T, colClasses = colClass)
+    onCols <- names(O2temp)[names(O2temp) %in% names(O2Clean)]
+    O2Clean <- rbindlist(l = list(O2temp[O2Clean,on=c(onCols)],
+                                  O2temp[!O2Clean,on=c(onCols)]),
+                         use.names = TRUE,
+                         fill = TRUE)
+  }
+  
+}
 
+# O2List <- list(
+#   data.table::fread(paste0(temploc,"/clean_datavW.csv"),data.table = T, colClasses = colClass),
+#   data.table::fread(paste0(temploc,"/clean_datavC.csv"),data.table = T, colClasses = colClass),
+#   data.table::fread(paste0(temploc,"/clean_datavA.csv"),data.table = T, colClasses = colClass))
+# onCols <- names(O2List[[1]])[names(O2List[[1]]) %in% names(O2List[[2]]) & names(O2List[[1]]) %in% names(O2List[[3]])]
+# onOrder <- order(c(dim(O2List[[1]])[1],dim(O2List[[2]])[1],dim(O2List[[3]])[1]))
+# 
+# O2Clean <- O2List[[onOrder[1]]][O2List[[onOrder[2]]][O2List[[onOrder[3]]],on= c(onCols)],on= c(onCols)]
 
-
-#data.table::fwrite(O2Clean,"data-raw/temp/clean_datavCWA.csv")
+#data.table::fwrite(O2Clean,paste0(temploc,"/clean_datavCWA.csv"))
 O2Clean[, DateAccessed := toDateTime(O2Clean$DateAccessed)]
 O2Clean[, DateWritten := toDateTime(O2Clean$DateWritten)]
 O2Clean[, DateCreated := toDateTime(O2Clean$DateCreated)]
 O2Clean[, Owner := gsub("\\\\","/",Owner)]
-
-
 
 source("data-raw/data_fct_addIcon.R")
 O2Clean <- addIcon(O2Clean)
@@ -198,5 +220,10 @@ data.table::setcolorder(O2Clean,
                                      "parentName","ID",'parentID',
                                      "TotalFileCount",'bg_clr','ico','ext'
                         ))
+return(O2Clean)
+}
+
+
+O2Clean <- GetO2(myDir = NULL,FName = "FildeFolderListv", WCA = c("W_022020","C_102020","A_052021"))
 usethis::use_data(O2Clean, overwrite = TRUE)
 
