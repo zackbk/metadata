@@ -8,21 +8,25 @@
 
 # return x filtered, searched, and arranged based on input parameters (file-or-folder, date, search string, Level, Extension, parent search string)
 SearchModel <- function(x,input) {
-  
+  print("SearchModel")
   x <- data.table::copy(x)
   x[, filter := TRUE]
-  x[ (filter == TRUE) & 
-       !(Type %in% input$fileOrFolder),
-     filter := FALSE ]
-  x[ (filter == TRUE) & 
-       !(DateCreated >= input$createdFrom & DateCreated <= input$createdTo),
-     filter := FALSE]
-  x[ (filter == TRUE) & 
-       !(DateWritten >= input$writtenFrom & DateWritten <= input$writtenTo),
-     filter := FALSE]
-  x[ (filter == TRUE) & 
-       !(DateAccessed >= input$accessedFrom & DateAccessed <= input$accessedTo),
-     filter := FALSE]
+  if("fileOrFolder" %in% names(x) & length(input$fileOrFolder)>0)
+    x[ (filter == TRUE) & 
+         !(Type %in% input$fileOrFolder),
+       filter := FALSE ]
+  if("DateCreated" %in% names(x) & length(input$createdFrom)>0 & length(input$createdTo)>0)
+    x[ (filter == TRUE) & 
+         !(DateCreated >= input$createdFrom & DateCreated <= input$createdTo),
+       filter := FALSE]
+  if("DateWritten" %in% names(x) & length(input$writtenFrom)>0 & length(input$writtenTo)>0)
+    x[ (filter == TRUE) & 
+         !(DateWritten >= input$writtenFrom & DateWritten <= input$writtenTo),
+       filter := FALSE]
+  if("DateAccessed" %in% names(x) & length(input$accessedFrom)>0 & length(input$accessedTo)>0)
+    x[ (filter == TRUE) & 
+         !(DateAccessed >= input$accessedFrom & DateAccessed <= input$accessedTo),
+       filter := FALSE]
   if (length(input$searchString) > 0) {
     if(input$searchString != "") {
       x[(filter == TRUE) & 
@@ -33,23 +37,26 @@ SearchModel <- function(x,input) {
         filter := FALSE]
     }
   }
-  if (length(input$minFolderDepth) > 0) {
+  if ("Level" %in% names(x) & length(input$minFolderDepth) > 0) {
     x[(filter == TRUE) & 
         !(Level >= input$minFolderDepth),
       filter := FALSE ]
   }
-  if (length(input$Owner) > 0 ) {
+  if ("Owner" %in% names(x) & length(input$Owner) > 0 ) {
     x[(filter == TRUE) & 
         !(tolower(Owner) %in% tolower(input$Owner)),
       filter := FALSE]
   }
-  if (length(input$extensionName) > 0) {
+  if ("Extension" %in% names(x) & length(input$extensionName) > 0) {
     x[(filter == TRUE) & 
         !(tolower(Extension) %in% tolower(input$extensionName) ), # extensions are always searched in lower case.
       filter := FALSE]
   }
   if (length(input$parentString) > 0) {
-    if(input$parentString != "") {
+    if("parentName" %in% names(x) &
+       length(input$parentString)>0 & 
+       input$parentString != "" & 
+       length(input$ignoreCase)>0) {
       x[(filter == TRUE) & 
           !stringr::str_detect(string = parentName, 
                                pattern = stringr::regex(

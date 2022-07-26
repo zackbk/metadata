@@ -4,19 +4,19 @@
 #' based on file type.
 #' note this is only useful to sort out information visually. 
 #' @param x the data table, should have the following column names
-#'        "Extension" name of the extension 
-#'        "Type": "File" or "Folder".
+#'        "Extension" name of the extension - character
+#'        "Type": "File" or "Folder". - character
 #'        "parentName"
 #'        "pathString"
 #'        "Owner" 
 #' @return x with new columns
-#'        "ext" lower case extension for files
-#'        "ico" extension icon (varies by Extension)
-#'        "link" icon, full file-link and name of the document (with extension)
-#'        "parentName" parentName with HTML link
-#'        "pathString" pathString with HTML link
-#'        "bg_clr" background color for folders (light-brown)
-#'        "OwnerEmail" link to GEDS email (in development)
+#'        "ext" lower case extension for files - character
+#'        "ico" extension icon (varies by Extension) - character
+#'        "link" icon, full file-link and name of the document (with extension) - character
+#'        "parentName" parentName with HTML link - character
+#'        "pathString" pathString with HTML link - character
+#'        "bg_clr" background color for folders (light-brown) - character
+#'        "OwnerEmail" link to GEDS email (in development) - (probably character).
 addIcon <- function(x = NULL){
   # note there are 330 extensions, and counting!! so we are only going to do the top 5.
   

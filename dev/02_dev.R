@@ -39,12 +39,15 @@ usethis::use_package("bit64") # for integer bytes to work properly
 ## Create a module infrastructure in R/
 golem::add_module( name = "1_body" ) # Name of the module
 golem::add_module( name = "2_controller" ) # Name of the module
+golem::add_module( name = "2_2_subctlr" ) # Name of the module
 golem::add_module( name = "3_view" ) # Name of the module
+golem::add_module( name = "4_engine" ) # Name of the module
 
 ## Add helper functions ----
 ## Creates ftc_* and utils_*
 golem::add_fct( "SearchModel" ,open = TRUE) 
 golem::add_fct( "SortView"   ,open = TRUE)
+golem::add_fct( "GetO2"   ,open = TRUE)
 golem::add_fct( "helpers" ) 
 golem::add_utils( "helpers" )
 
@@ -60,6 +63,8 @@ usethis::use_data_raw( name = "1_O2Clean", open = TRUE )
 usethis::use_data_raw( name = "2_T2", open = TRUE )
 usethis::use_data_raw( name = "3_fileIcons", open = TRUE )
 usethis::use_data_raw( name = "4_O2Names", open = TRUE )
+usethis::use_data_raw( name = "5_timeInit", open = TRUE )
+usethis::use_data_raw( name = "6_colClass", open = TRUE )
 ## Tests ----
 ## Add one line by test you want to create
 usethis::use_test( "app" )

@@ -1,13 +1,13 @@
 Package: ShareDriveApp
 Title: An Amazing Shiny App
-Version: 0.0.1.0000
+Version: 0.2.0.0000
 Authors@R: 
     person(given = "firstname",
            family = "lastname",
            role = c("aut", "cre"),
            email = "your@email.com")
 Description: What the package does (one paragraph).
-License: CC BY 4.0
+License: MIT + file LICENSE
 Imports: 
     config,
     golem,
@@ -28,7 +28,9 @@ Imports:
     pkgload,
     shinymaterial,
     shinyalert,
-    bit64
+    bit64,
+    ggiraph,
+    compareDF
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
