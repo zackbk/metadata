@@ -77,28 +77,54 @@ mod_4_engine_server <- function(input, output, session, r){
       
       if(sum(rda,csv,txt)>0) {
         
-        onCols <- names(DT_temp)[names(DT_temp) %in% names(DT)] # must be before idxPath & idxFile
-        # DT_temp[,"idxPath" := input$uploadIndex$datapath[i]]
-        # DT_temp[,"idxFile" := gsub(".*/","",input$uploadIndex$datapath[i])]
-        
-        if(i == 1){
+        if(i == 1 & (dim(DT)[1]==0 | input$compareData==FALSE)) {
           DT <- data.table::rbindlist(l = list(DT,DT_temp),use.names = TRUE,fill = TRUE)
         } else{
-          tryCatch(expr = {
             if((input$compareData == TRUE)){ # data "comparison version"
               # the logic for deciding which one is old versus new is irrelevant at this point.
+              # compare original table and table being added
+              onCols <- names(DT_temp)[names(DT_temp) %in% names(DT)] # must be before idxPath & idxFile
+              doNotCompare <- c("chng_type","chng_sum", "DateCreatedIndexDate", "DateWrittenIndexDate", "DateAccessedIndexDate")
+              onCols <- onCols[!onCols %in% doNotCompare]
+              common_DNC <- doNotCompare[doNotCompare %in% names(DT) & doNotCompare %in% names(DT_temp)] # remove 
               rbL <- function() {
-                DT_ans <- data.table::as.data.table(
-                  compareDF::compare_df(df_new = DT_temp[,onCols],df_old = DT[,onCols],keep_unchanged_rows = TRUE,group_col = onCols)$comparison_df
-                )
-                DT_fin <- DT_ans[!duplicated(DT_ans),]
+                ansIssue = TRUE
+                tryCatch(expr = {
+                  DT_ans <- data.table::as.data.table(
+                    compareDF::compare_df(df_new = DT_temp[,..onCols],df_old = DT[,..onCols],keep_unchanged_rows = TRUE,group_col = onCols)$comparison_df
+                  )
+                  ansIssue = FALSE
+                }, error = function(e) {
+                  warning("comparedf issue - 2222222222222")
+                  print(e)
+                })
+                if(ansIssue == TRUE) {
+                  print("ansIssue")
+                  DT_ans <- data.table::rbindlist(l = list(DT,DT_temp),use.names = TRUE,fill = TRUE)
+                  if(is.null(DT_ans$chng_type)) {
+                    DT_ans[, chng_type := ""]
+                  }
+                  DT_ans[is.na(chng_type), chng_type := "="]
+                }
                 
-                list(data.table::data.table(chng_type = "=",
-                                            DT_temp[DT[DT_fin[chng_type ==  "=",],on=c(onCols)],on=c(onCols)]), # unchanged
-                     data.table::data.table(chng_type = "-",
-                                            DT[DT_fin[chng_type ==  "-",],on=c(onCols)]), # old
-                     data.table::data.table(chng_type = "+",
-                                            DT_temp[DT_fin[chng_type ==  "+",],on=c(onCols)]) # new
+                DT_fin <- DT_ans[!duplicated(DT_ans),]
+                DT_DNC <- DT[,!..common_DNC] # if common "old" and "new" cols exist, remove DNC cols in the inner join for consistency. 
+                
+                DT_a <- DT_temp[DT_DNC[DT_fin[chng_type ==  "=",],on=c(onCols)],on=c(onCols)]
+                if(dim(DT_a)[1]>0) DT_a[, `:=`(chng_type = "=",
+                                               chng_sum = paste0(chng_sum,chng_type,i))]
+                
+                DT_b <- DT[DT_fin[chng_type ==  "-",],on=c(onCols)]
+                if(dim(DT_b)[1]>0) DT_b[, `:=`(chng_type = "-",
+                                               chng_sum = paste0(chng_sum,chng_type,i))]
+                
+                DT_c <- DT_temp[DT_fin[chng_type ==  "+",],on=c(onCols)]
+                if(dim(DT_c)[1]>0) DT_c[, `:=`(chng_type = "+",
+                                               chng_sum = paste0(chng_sum,chng_type,i))]
+                
+                list(DT_a, # unchanged
+                     DT_b, # old
+                     DT_c # new
                 )
               }
             } else{
@@ -107,11 +133,6 @@ mod_4_engine_server <- function(input, output, session, r){
             DT <- data.table::rbindlist(l = rbL(),
                                         use.names = TRUE,
                                         fill = TRUE)
-          }, error = function(e) {
-            warning("engine error")
-            print(e)
-          })
-          
         }
       }
     }
@@ -195,7 +216,7 @@ echo %mydate% with created written and or access dates'
     },
     content = function(fName) {
       print("Download Data")
-      data.table::fwrite(r$temp)
+      data.table::fwrite(x = r$temp, file = fName)
     }
   )
   

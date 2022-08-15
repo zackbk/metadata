@@ -13,6 +13,7 @@
 source("R/fct_GetO2.R")
 O2Clean <- GetO2(myDir="../SDA-temp/temp/",FName=c("FileFolderListvW_022020.txt","FileFolderListvC_102020.txt","FileFolderListvA_052021.txt"))
 O2Clean[,chng_type := "="]
+O2Clean[,chng_sum := "0=1"]
 O2Empty <- O2Clean[FALSE,]
 usethis::use_data(O2Empty, overwrite = TRUE)
 
