@@ -14,7 +14,7 @@
 ## Fill the DESCRIPTION ----
 ## Add meta data about your application
 golem::fill_desc(
-  pkg_name = "ShareDriveApp", # The Name of the package containing the App 
+  pkg_name = "MetadataApp", # The Name of the package containing the App 
   pkg_title = "Search Drive File Index", # The Title of the package containing the App 
   pkg_description = "Allows Searching Shared Drive File Index (see data-raw for how to create archive)", # The Description of the package containing the App 
     author_first_name = "Zekarias", # Your First Name

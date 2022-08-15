@@ -1,12 +1,12 @@
-Package: ShareDriveApp
-Title: An Amazing Shiny App
-Version: 0.2.0.0000
+Package: MetadataApp
+Title: Shiny Metadata App
+Version: 0.2.1.0000
 Authors@R: 
-    person(given = "firstname",
-           family = "lastname",
+    person(given = "ZEKARIAS",
+           family = "KEDIDA",
            role = c("aut", "cre"),
-           email = "your@email.com")
-Description: What the package does (one paragraph).
+           email = "zackbk@gmail.com")
+Description: This shiny app records file/folder metadata, and allows you to process and visualise it after recording.
 License: MIT + file LICENSE
 Imports: 
     config,

@@ -72,7 +72,7 @@ usethis::use_test( "app" )
 # Documentation
 
 ## Vignette ----
-usethis::use_vignette("ShareDriveApp")
+usethis::use_vignette("MetadataApp")
 devtools::build_vignettes()
 
 ## Code coverage ----

@@ -10,20 +10,21 @@
 mod_3_view_ui <- function(id){
   ns <- NS(id)
   tagList(
+    shinyWidgets::downloadBttn(outputId = ns("export"),label = "publish (local only)", style = "material-flat", color = "default", size = "md", block = FALSE),
     shinymaterial::material_tabs(
       tabs = c(
-        "I  Home" = "home_tab",
-        "II Files" = "main_tab",
-        "III SubFolders" = "parent_tab",
-        "IV Summary" = "summary_tab",
-        "V Chart" = "chart_tab"
+        # "I  Home" = "home_tab",
+        "I Files" = "main_tab",
+        "II SubFolders" = "parent_tab",
+        "III Summary" = "summary_tab",
+        "IV Chart" = "chart_tab"
       )
     ),
     # Define tab content
-    shinymaterial::material_tab_content(
-      tab_id = "home_tab",
-      # mod_4_engine_ui("4_engine_ui_1")
-    ),
+    # shinymaterial::material_tab_content(
+    #   tab_id = "home_tab",
+    #   # mod_4_engine_ui("4_engine_ui_1")
+    # ),
     shinymaterial::material_tab_content(
       tab_id = "main_tab",
       DT::DTOutput(ns("Main"))
@@ -42,8 +43,7 @@ mod_3_view_ui <- function(id){
       shinymaterial::material_card(title = "chart",
                                    shiny::uiOutput(outputId = ns('Chart'))
       )
-    ),
-    shinyWidgets::downloadBttn(outputId = ns("export"),label = "export results", style = "material-flat", color = "default", size = "md", block = FALSE)
+    )
   )
   
 }

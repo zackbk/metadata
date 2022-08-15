@@ -83,7 +83,19 @@ chartView <- function(rvalue = NULL, DataTab = rvalue$summaryView, chartType = "
                                            fill = groupBy[1], 
                                            color = groupBy[ifelse(length(groupBy)>1, 2, 1)]))      
     }
+    # groupBy is a hex object
+    if(grepl("^#[a-z0-9]{6}$",DataTab[[groupBy[[1]]]][1])){
+      print("hex")
+      p <- p + ggplot2::scale_fill_manual(values = DataTab[[groupBy[1]]])
+    } else if(is.numeric(DataTab[[yCol[1]]])){
+      print("gradient")
+      p <- p + ggplot2::scale_fill_gradient2()
+    } else{
+      print("discrete")
+      p <- p + ggplot2::scale_fill_discrete()
+    }
   }
+
   # add final values
   if(chartPkg %in% c("ggplot2","ggiraph") ) {
     
@@ -93,7 +105,7 @@ chartView <- function(rvalue = NULL, DataTab = rvalue$summaryView, chartType = "
       themeFun <- ggplot2::theme_grey
       p <- p + themeFun(base_size = 8) # + scale_colour_distiller() # (max allowed: 9)
       p <- p + ggplot2::theme(legend.position = "bottom",
-                              axis.text.x = ggplot2::element_text(angle = 45, vjust = 1, hjust=1))  
+                              axis.text.x = ggplot2::element_text(angle = 45,size=14, vjust = 1, hjust=1))  
       p <- p + ggplot2::guides(fill = ggiraph::guide_legend_interactive(nrow=5, byrow=TRUE,
                                                                         legend.spacing = ggplot2::unit(0, 'mm'),
                                                                         legend.key.size = ggplot2::unit(15, "mm"),

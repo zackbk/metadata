@@ -8,11 +8,11 @@
 
 
 #'@param myDir ?.
-#'@param FName prefix for the file name - typically this is the name of the mapped drive.
+#'@param FName prefix for the file name - typically this is the name of the mapped drive, "FileFolderListv".
 #'@param WCA last written, creation, last accessed.
 #'@param temploc ?.
 #'@return O2Clean w
-GetO2 <- function(myDir = NULL, FName = "FileFolderListv", WCA = NULL, temploc = NULL) {
+GetO2 <- function(myDir = NULL, FName = NULL, WCA = NULL, temploc = NULL) {
   # initialise libraries
   # library(bit64)
   # library(stringr)
@@ -21,22 +21,29 @@ GetO2 <- function(myDir = NULL, FName = "FileFolderListv", WCA = NULL, temploc =
   # library(dplyr)
   print("Run GetO2")
   if(is.null(temploc)) temploc <- gsub("\\\\","/",tempdir())
+  O2Tables <- c()
+  if(is.null(FName)) {
+    FName <- myDir
+  } else if (length(FName)>1 & length(myDir)==1 & sum(grepl("/|\\\\",FName))==0){
+    myDir <- paste0(myDir,ifelse(grepl("/$|\\\\$",myDir),"","/"),FName)
+  }
+  
   if(is.null(WCA)){
     if(is.null(myDir)){
       #WCA <- paste0(c("W","C","A"),sprintf("_%02d%4d",data.table::month(Sys.Date()), data.table::year(Sys.Date())))
       error("GetO2 failed to find directory input")
     } else{
-      WCA <- rep("W",length(myDir))
-      WCA[grepl("vC_[0-9]{0,8}\\.txt$",myDir,ignore.case = TRUE)] <- "C"
-      WCA[grepl("vW_[0-9]{0,8}\\.txt$",myDir,ignore.case = TRUE)] <- "W"
-      WCA[grepl("vA_[0-9]{0,8}\\.txt$",myDir,ignore.case = TRUE)] <- "A"
-
+      WCA <- rep("W",length(FName))
+      WCA[grepl("vC_[0-9]{0,8}\\.txt$",FName,ignore.case = TRUE)] <- "C"
+      WCA[grepl("vW_[0-9]{0,8}\\.txt$",FName,ignore.case = TRUE)] <- "W"
+      WCA[grepl("vA_[0-9]{0,8}\\.txt$",FName,ignore.case = TRUE)] <- "A"
     }
   }
   print("WCA")
   print(WCA)  
   # Step 1: Clean Data
   # A is accessed, we don't typically use.
+  
   for(i in 1:length(myDir)) { # last written, last created, last accessed
     print(WCA[i])
     
@@ -125,9 +132,9 @@ GetO2 <- function(myDir = NULL, FName = "FileFolderListv", WCA = NULL, temploc =
     print("DateTime")
     print(DateTime)
     names(O2Data)[names(O2Data) %in% "DateTime"] <- DateTime
-    O2Data[,paste0(DateTime,"IndexDate")] <- stringr::str_extract(myDir[i],"[0-9]{8}") # #Sys.time() # NEW
+    O2Data[,paste0(DateTime,"IndexDate")] <- stringr::str_extract(FName[i],"[0-9]{8}") # #Sys.time() # NEW
     data.table::fwrite(O2Data,paste0(temploc,"/clean_datav",substring(WCA[i],1,1),".csv"))
-    
+    O2Tables <- c(O2Tables,paste0(temploc,"/clean_datav",substring(WCA[i],1,1),".csv"))
     rm(O2_original,O2,O2Dir,O2DirCount,O2NodeID,O2Property,O2DirNums,O2DirSize,O2FileSubDirInfo,O2ParentID,
        O2IsFile,O2FileInfo,O2SubDirInfo,O2FileParentID,O2SubDirParentID,O2FileDateTime,O2FileBytes,O2FileOwner,
        O2FileNameExt,O2FileExt,O2FileName,O2FileNChars,O2FileLevel,O2SubDirDateTime,O2SubDirOwner,
@@ -182,7 +189,7 @@ GetO2 <- function(myDir = NULL, FName = "FileFolderListv", WCA = NULL, temploc =
                    "integer" = c("parentID","ID","CharacterLength","Level","TotalFileCount","DirectFileCount"),
                    "numeric" = c("TotalByteSize","DirectByteSize"))
   
-  O2Tables <- list.files(path = temploc,pattern = "clean_datav",full.names = TRUE)
+  #O2Tables <- list.files(path = temploc,pattern = "clean_datav",full.names = TRUE)
   
   for(i in seq_along(O2Tables)) {
     if(i == 1){

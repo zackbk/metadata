@@ -11,7 +11,8 @@
 #shell.exec(file = "data-raw/ListAllShareDriveFoldersFiles.bat")
 ## GetO2
 source("R/fct_GetO2.R")
-O2Clean <- GetO2(myDir = NULL,FName = "FileFolderListv", WCA = c("W_022020","C_102020","A_052021"))
+O2Clean <- GetO2(myDir="../SDA-temp/temp/",FName=c("FileFolderListvW_022020.txt","FileFolderListvC_102020.txt","FileFolderListvA_052021.txt"))
+O2Clean[,chng_type := "="]
 O2Empty <- O2Clean[FALSE,]
-usethis::use_data(O2Clean, O2Empty, overwrite = TRUE)
+usethis::use_data(O2Empty, overwrite = TRUE)
 

@@ -10,7 +10,7 @@ app_ui <- function(request) {
     golem_add_external_resources(),
     # List the first level UI elements here 
     shinymaterial::material_page(
-      title = "ShinyDriveApp",
+      title = "MetadataApp",
       primary_theme_color = "#3700B3",
       secondary_theme_color = "#3700B3",
       background_color = "#FFFFFF",
@@ -57,7 +57,7 @@ golem_add_external_resources <- function(){
     favicon(ext = "png"),
     bundle_resources(
       path = app_sys('app/www'),
-      app_title = 'ShareDriveApp'
+      app_title = 'MetadataApp'
     ),
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()

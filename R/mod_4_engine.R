@@ -12,16 +12,17 @@ mod_4_engine_ui <- function(id){
   tagList(
     HTML("<b> 1. Create a batch script to index files. </b> <br>"),
     shiny::selectInput(inputId = ns("timefield"),label = "i. timefield", choices = c("Creation", "Last Accessed", "Last Written"), selected = c("Creation", "Last Written"), multiple = TRUE),
-    shiny::textInput(inputId=ns("drives"),label = "ii. drives",value = "H|N"),
-    shiny::textInput(inputId=ns("delimiter"),label = "ii. delimiter",value = "|"),
+    shiny::textInput(inputId = ns("drives"),label = "ii. drives",value = "H|N"),
+    shiny::textInput(inputId = ns("delimiter"),label = "ii. delimiter",value = "|"),
     #HTML("Note: You can re-run scripts periodically using a task scheduler <br>"),
     shinyWidgets::downloadBttn(outputId = ns("createScript"), label = "iii. Export Script"),
     HTML("<br> <b> 2. Upload file index (.txt or .Rdata) </b> <br>"),
     shiny::fileInput(inputId = ns("uploadIndex"),label = "iv/vii. Upload Files (batch output, or app-csv) ",multiple = TRUE), # also processes the file
     shiny::checkboxInput(inputId = ns('compareData'),label = "incremental analysis",value = TRUE),
     #shiny::checkboxInput(inputID = ns('unchangedEntries'),label = "show unchanged files",value = TRUE),
-    shinyWidgets::downloadBttn(outputId = ns("downloadData"),label = "vi. Save All", size = "md", block = FALSE), # allows the user to download the final processed info (in .RData for starters)
-    shinyWidgets::downloadBttn(outputId = ns("export"),label = "v. Save Filtered", style = "material-flat", color = "default", size = "md", block = FALSE)
+    shinyWidgets::actionBttn(inputId = ns("clear"),label = "delete",icon = icon("trash")),
+    shinyWidgets::downloadBttn(outputId = ns("downloadData"),label = "vi. All", size = "md", block = FALSE), # allows the user to download the final processed info (in .RData for starters)
+    shinyWidgets::downloadBttn(outputId = ns("export"),label = "v. Filtered", style = "material-flat", color = "default", size = "md", block = FALSE)
   )
 }
 
@@ -32,10 +33,14 @@ mod_4_engine_server <- function(input, output, session, r){
   ns <- session$ns
   print("RUN mod_4")
   
+  shiny::observeEvent(input$clear,{
+    r$O2 <- O2Empty
+  },ignoreInit = TRUE)
+  
   shiny::observeEvent(input$timefield,{
     print("RUN timefield")
     r$timefield <- input$timefield
-    r$WCA <- c("C","W","A")[c("Creation", "Last Accessed", "Last Written") %in% r$timefield]
+    r$WCA <- c("C","A","W")[c("Creation", "Last Accessed", "Last Written") %in% r$timefield]
   },ignoreInit = FALSE)
   
   shiny::observeEvent(c(input$drives,input$delimiter),{
@@ -51,53 +56,63 @@ mod_4_engine_server <- function(input, output, session, r){
     
     for(i in 1:length(input$uploadIndex$datapath) ) {
       print(i)
-      txt <- grep(pattern = "\\.txt$",x = input$uploadIndex$datapath[i],ignore.case = T) # text file is raw file index
-      rda <- grep(pattern = "\\.rda$",x = input$uploadIndex$datapath[i],ignore.case = T)
-      csv <-  grep(pattern = "\\.csv$",x = input$uploadIndex$datapath[i],ignore.case = T)
+      rm(DT_temp)
+      txt <- grepl(pattern = "\\.txt$",x = input$uploadIndex$datapath[i],ignore.case = T) # text file is raw file index
+      rda <- grepl(pattern = "\\.rda$",x = input$uploadIndex$datapath[i],ignore.case = T)
+      csv <-  grepl(pattern = "\\.csv$",x = input$uploadIndex$datapath[i],ignore.case = T)
       
       if(sum(rda)>0) {
-        load(input$uploadIndex$datapath[rda],envir = .GlobalEnv)
-        # DT <- data.table::rbindlist(l = list(DT,base::get()),use.names = TRUE,fill = TRUE) # under development
-      } 
-      
-      if(sum(txt)>0) { # 1.0 
-        DT_temp <- GetO2(myDir = input$uploadIndex$datapath[txt])
-      } else if (sum(csv)>0) {
-        DT_temp <- data.table::fread(input$uploadIndex$datapath[csv],colClasses = colClass)
-      }
-      
-      onCols <- names(DT_temp)[names(DT_temp) %in% names(DT)] # must be before idxPath & idxFile
-      DT_temp[,"idxPath" := input$uploadIndex$datapath[csv]]
-      DT_temp[,"idxFile" := gsub(".*/","",input$uploadIndex$datapath[csv])]
-      
-      if(i == 1){
-        DT <- data.table::rbindlist(l = list(DT,DT_temp),use.names = TRUE,fill = TRUE)
-      } else{
+        load(input$uploadIndex$datapath[i],envir = .GlobalEnv)
+        #DT_temp <- base::get() # under development
+      } else if(sum(txt)>0) { # 1.0 
         tryCatch(expr = {
-          if((input$compareData == TRUE)){ # data "comparison version"
-            # the logic for deciding which one is old versus new is irrelevant at this point.
-            rbL <- function() {
-              DT_ans <- data.table::as.data.table(
-                compareDF::compare_df(df_new = DT_temp[,onCols],df_old = DT[,onCols],keep_unchanged_rows = TRUE,group_col = onCols)$comparison_df
-              )
-              DT_fin <- DT_ans[!duplicated(DT_ans),]
-              
-              list(DT_temp[DT[DT_fin[chng_type ==  "=",],on=c(onCols)],on=c(onCols)], # unchanged
-                   DT[DT_fin[chng_type ==  "-",],on=c(onCols)], # old
-                   DT_temp[DT_fin[chng_type ==  "+",],on=c(onCols)] # new
-              )
-            }
-          } else{
-            rbL <- function() list(DT_temp[DT,on=c(onCols)],DT_temp[!DT,on=c(onCols)])
-          }
-          DT <- data.table::rbindlist(l = rbL(),
-                                      use.names = TRUE,
-                                      fill = TRUE)
+        DT_temp <- GetO2(myDir = input$uploadIndex$datapath[i],FName = input$uploadIndex$name[i])
         }, error = function(e) {
-          warning("engine error")
+          warning("GetO2 error")
           print(e)
         })
+      } else if (sum(csv)>0) {
+        DT_temp <- data.table::fread(input$uploadIndex$datapath[i],colClasses = colClass)
+      }
+      
+      if(sum(rda,csv,txt)>0) {
         
+        onCols <- names(DT_temp)[names(DT_temp) %in% names(DT)] # must be before idxPath & idxFile
+        # DT_temp[,"idxPath" := input$uploadIndex$datapath[i]]
+        # DT_temp[,"idxFile" := gsub(".*/","",input$uploadIndex$datapath[i])]
+        
+        if(i == 1){
+          DT <- data.table::rbindlist(l = list(DT,DT_temp),use.names = TRUE,fill = TRUE)
+        } else{
+          tryCatch(expr = {
+            if((input$compareData == TRUE)){ # data "comparison version"
+              # the logic for deciding which one is old versus new is irrelevant at this point.
+              rbL <- function() {
+                DT_ans <- data.table::as.data.table(
+                  compareDF::compare_df(df_new = DT_temp[,onCols],df_old = DT[,onCols],keep_unchanged_rows = TRUE,group_col = onCols)$comparison_df
+                )
+                DT_fin <- DT_ans[!duplicated(DT_ans),]
+                
+                list(data.table::data.table(chng_type = "=",
+                                            DT_temp[DT[DT_fin[chng_type ==  "=",],on=c(onCols)],on=c(onCols)]), # unchanged
+                     data.table::data.table(chng_type = "-",
+                                            DT[DT_fin[chng_type ==  "-",],on=c(onCols)]), # old
+                     data.table::data.table(chng_type = "+",
+                                            DT_temp[DT_fin[chng_type ==  "+",],on=c(onCols)]) # new
+                )
+              }
+            } else{
+              rbL <- function() list(DT_temp[DT,on=c(onCols)],DT_temp[!DT,on=c(onCols)])
+            }
+            DT <- data.table::rbindlist(l = rbL(),
+                                        use.names = TRUE,
+                                        fill = TRUE)
+          }, error = function(e) {
+            warning("engine error")
+            print(e)
+          })
+          
+        }
       }
     }
     print("cleaning data")
@@ -123,7 +138,7 @@ mod_4_engine_server <- function(input, output, session, r){
   
   output$createScript <- shiny::downloadHandler(
     filename = function() {
-      paste0("index_",r$WCA,gsub("-","",Sys.Date()),".bat") # "index_20220701.bat"
+      paste0("index_",paste0(r$WCA,collapse=""),gsub("-","",Sys.Date()),".bat") # "index_20220701.bat"
     },
     content = function(fName) {
       print("RUN createScript")
@@ -141,9 +156,10 @@ echo %mydate% with created written and or access dates'
       repText_2_0 <- 'DIR '
       repText_2_0_1 <- '"'
       repText_2_1 <- ':' # only valid for single letters
-      repText_2_1_1 <- "\\"
+      # repText_2_1_1 <- "\\"
       repText_2_1_2 <- '"'
-      repText_2_2 <- ' /A /T:W /S /Q /R /N /-C > '
+      repText_2_2 <- ' /A /T:'
+      repText_2_2_1 <- ' /S /Q /R /N /-C > '
       repText_2_3 <- 'v'
       repText_2_4 <- '_%mydate%.txt'
       footerText <- 'msg /time:2.5 %username% "finished query" '
@@ -154,9 +170,12 @@ echo %mydate% with created written and or access dates'
                                                        "Last Accessed"))," Date",repText_1_3,collapse=""),
                                   paste0(repText_2_0,repText_2_0_1,X,
                                          ifelse(nchar(as.character(X))==1,repText_2_1,""),
-                                         ifelse(substring(X,nchar(as.character(X)))!="\\",repText_2_1_1,""),
+                                         ifelse(! substring(X,nchar(as.character(X))) %in% c("\\","/"),ifelse(grepl("/",X),"/","\\"),""),
                                          repText_2_1_2,
                                          repText_2_2,
+                                         ifelse("C" %in% Y,"C",
+                                                ifelse("W" %in% Y,"W",
+                                                       "A")),repText_2_2_1,
                                          substring(gsub("\\\\","",X),1,1),repText_2_3,
                                          Y,repText_2_4,
                                          collapse="") )
@@ -172,7 +191,7 @@ echo %mydate% with created written and or access dates'
   
   output$downloadData <- shiny::downloadHandler(
     filename = function() {
-      paste0("SDA-",Sys.Date(),".csv")
+      paste0("SDA-",Sys.Date(),".csv",sep="")
     },
     content = function(fName) {
       print("Download Data")

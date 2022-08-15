@@ -15,9 +15,9 @@ mod_2_2_subctlr_ui <- function(id){
         # width = 2,
         # Controllers
         shinyWidgets::dropMenu( # mod_3_1_viewCtlr
-          tag = shinyWidgets::actionBttn(inputId = ns("sortOptions"),"Sort", style = "material-flat", color = "default", size = "md", block = FALSE, icon = icon("sort")),
+          tag = shinyWidgets::actionBttn(inputId = ns("sortOptions"),"Select/Sort", style = "material-flat", color = "default", size = "md", block = FALSE, icon = icon("sort")),
           shiny::selectInput(inputId = ns("colView"),label = "Show Columns",choices = names(O2Empty),
-                             selected = c("link","Owner","ext","DateAccessed","TotalByteSize","parentName"), multiple = TRUE),
+                             selected = c("link","Owner","ext","DateAccessed","DateCreated","DateWritten","TotalByteSize","parentName"), multiple = TRUE),
           shiny::selectInput(inputId = ns("arrangeBy"),label = "Arrange by",choices = c("",names(O2Empty)), multiple = FALSE),
           shinyWidgets::switchInput(inputId = ns('order'), onLabel = "Z-A",offLabel = "A-Z",value = FALSE)
         ),
@@ -25,7 +25,7 @@ mod_2_2_subctlr_ui <- function(id){
       # shinymaterial::material_column(
         # width = 2,
         shinyWidgets::dropMenu(
-          tag = shinyWidgets::actionBttn(inputId = ns("summaryOptions"),"summary", style = "material-flat", size = "md", color = "default", block = FALSE, icon = icon("receipt")),
+          tag = shinyWidgets::actionBttn(inputId = ns("chartOptions"),"Table/Chart", style = "material-flat", size = "md", color = "default", block = FALSE, icon = icon("magnifying-glass-chart")),
           shiny::selectInput(inputId = ns("xCol"), label = "X", choices = c(O2Names$cols_numeric,O2Names$cols_string,O2Names$cols_date), selected = "ext", multiple = FALSE),
           shiny::selectInput(inputId = ns("yCol"), label = "Y", choices = c(O2Names$cols_numeric,O2Names$cols_string,O2Names$cols_date), selected = "TotalByteSize"),
           shiny::selectInput(inputId = ns("yNumCols"), label = "Zs", choices = c(O2Names$cols_numeric), selected = "TotalFileCount", multiple = TRUE),
@@ -37,7 +37,7 @@ mod_2_2_subctlr_ui <- function(id){
       # shinymaterial::material_column(
       #   width = 2,
         shinyWidgets::dropMenu( # mod_3_1_viewCtlr
-          tag = shinyWidgets::actionBttn(inputId = ns("chartOptions"),"chart", style = "material-flat", color = "default", size = "md", block = FALSE, icon = icon("chart-area")),
+          tag = shinyWidgets::actionBttn(inputId = ns("displayOptions"),"Display Options", style = "material-flat", color = "default", size = "md", block = FALSE, icon = icon("uncharted")),
           shiny::selectInput(inputId = ns("chartType"),label = "Chart type",choices = c("auto","area","boxplot","bar","col","point","density","raster","histogram","line","pie"), selected="auto"),
           shiny::selectInput(inputId = ns("chartPkg"),label = "Chart package",choices = c("ggiraph","ggplot2","plotly","base"), selected="ggplot2",multiple = TRUE),
           shinyWidgets::noUiSliderInput(inputId = ns("height_svg"),label = "height",min = 3,max = 20,value = 6,step = 0.25),

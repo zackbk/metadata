@@ -1,4 +1,4 @@
 library(testthat)
-library(ShareDriveApp)
+library(MetadataApp)
 
-test_check("ShareDriveApp")
+test_check("MetadataApp")

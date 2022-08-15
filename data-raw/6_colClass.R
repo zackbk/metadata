@@ -8,7 +8,7 @@ colOrder <- c("link","Owner","Extension","chng_type","Level","DateCreated","Date
   "TotalByteSize","DirectByteSize","DirectFileCount","CharacterLength",
   "pathString",
   "parentName","ID",'parentID',
-  "TotalFileCount",'bg_clr','ico','ext'
+  "TotalFileCount",'bg_clr','ico','ext','fileType'
 )
 
 usethis::use_data(colClass,colOrder, overwrite = TRUE)
