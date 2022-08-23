@@ -42,6 +42,12 @@ SearchModel <- function(x,input) {
         !(Level >= input$minFolderDepth),
       filter := FALSE ]
   }
+  if ("Level" %in% names(x) & length(input$maxFolderDepth) > 0) {
+    x[(filter == TRUE) &
+        !(Level <= input$maxFolderDepth),
+      filter := FALSE ]
+  }
+  
   if ("Owner" %in% names(x) & length(input$Owner) > 0 ) {
     x[(filter == TRUE) & 
         !(tolower(Owner) %in% tolower(input$Owner)),

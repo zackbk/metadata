@@ -87,11 +87,11 @@ chartView <- function(rvalue = NULL, DataTab = rvalue$summaryView, chartType = "
     if(grepl("^#[a-z0-9]{6}$",DataTab[[groupBy[[1]]]][1])){
       print("hex")
       p <- p + ggplot2::scale_fill_manual(values = DataTab[[groupBy[1]]])
-    } else if(is.numeric(DataTab[[yCol[1]]])){
+    } else if(is.numeric(DataTab[[groupBy[1]]])){
       print("gradient")
-      p <- p + ggplot2::scale_fill_gradient2()
+      p <- p + ggplot2::scale_fill_gradient()
     } else{
-      print("discrete")
+      print("discrete2")
       p <- p + ggplot2::scale_fill_discrete()
     }
   }

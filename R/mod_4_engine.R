@@ -12,13 +12,14 @@ mod_4_engine_ui <- function(id){
   tagList(
     HTML("<b> 1. Create a batch script to index files. </b> <br>"),
     shiny::selectInput(inputId = ns("timefield"),label = "i. timefield", choices = c("Creation", "Last Accessed", "Last Written"), selected = c("Creation", "Last Written"), multiple = TRUE),
-    shiny::textInput(inputId = ns("drives"),label = "ii. drives",value = "H|N"),
+    shiny::textInput(inputId = ns("drives"),label = "ii. directory (e.g. drive)",value = "H|N"),
     shiny::textInput(inputId = ns("delimiter"),label = "ii. delimiter",value = "|"),
     #HTML("Note: You can re-run scripts periodically using a task scheduler <br>"),
     shinyWidgets::downloadBttn(outputId = ns("createScript"), label = "iii. Export Script"),
-    HTML("<br> <b> 2. Upload file index (.txt or .Rdata) </b> <br>"),
+    HTML("<br> <b> 2. Convert into table (.txt or .Rdata) </b> <br>"),
     shiny::fileInput(inputId = ns("uploadIndex"),label = "iv/vii. Upload Files (batch output, or app-csv) ",multiple = TRUE), # also processes the file
-    shiny::checkboxInput(inputId = ns('compareData'),label = "incremental analysis",value = TRUE),
+    shiny::plotOutput(outputId = "runtime",height = 1),
+    shiny::checkboxInput(inputId = ns('compareData'),label = "unify output",value = TRUE),
     #shiny::checkboxInput(inputID = ns('unchangedEntries'),label = "show unchanged files",value = TRUE),
     shinyWidgets::actionBttn(inputId = ns("clear"),label = "delete",icon = icon("trash")),
     shinyWidgets::downloadBttn(outputId = ns("downloadData"),label = "vi. All", size = "md", block = FALSE), # allows the user to download the final processed info (in .RData for starters)
@@ -51,6 +52,7 @@ mod_4_engine_server <- function(input, output, session, r){
   
   observeEvent(input$uploadIndex$datapath, {
     print("RUN uploadIndex")
+    shinymaterial::material_spinner_show(session = session, output_id = "runtime")
     
     DT <- data.table::data.table()
     
@@ -66,7 +68,7 @@ mod_4_engine_server <- function(input, output, session, r){
         #DT_temp <- base::get() # under development
       } else if(sum(txt)>0) { # 1.0 
         tryCatch(expr = {
-        DT_temp <- GetO2(myDir = input$uploadIndex$datapath[i],FName = input$uploadIndex$name[i])
+          DT_temp <- GetO2(myDir = input$uploadIndex$datapath[i],FName = input$uploadIndex$name[i])
         }, error = function(e) {
           warning("GetO2 error")
           print(e)
@@ -74,65 +76,73 @@ mod_4_engine_server <- function(input, output, session, r){
       } else if (sum(csv)>0) {
         DT_temp <- data.table::fread(input$uploadIndex$datapath[i],colClasses = colClass)
       }
-      
       if(sum(rda,csv,txt)>0) {
         
-        if(i == 1 & (dim(DT)[1]==0 | input$compareData==FALSE)) {
+        if(i == 1 & (dim(DT)[1]==0 | input$compareData==FALSE)) { # if no data exists or comparison is off
           DT <- data.table::rbindlist(l = list(DT,DT_temp),use.names = TRUE,fill = TRUE)
+          DT[, `:=` ('chng_type' = "", 'chng_sum' = "")]
         } else{
-            if((input$compareData == TRUE)){ # data "comparison version"
-              # the logic for deciding which one is old versus new is irrelevant at this point.
-              # compare original table and table being added
-              onCols <- names(DT_temp)[names(DT_temp) %in% names(DT)] # must be before idxPath & idxFile
-              doNotCompare <- c("chng_type","chng_sum", "DateCreatedIndexDate", "DateWrittenIndexDate", "DateAccessedIndexDate")
-              onCols <- onCols[!onCols %in% doNotCompare]
-              common_DNC <- doNotCompare[doNotCompare %in% names(DT) & doNotCompare %in% names(DT_temp)] # remove 
-              rbL <- function() {
-                ansIssue = TRUE
-                tryCatch(expr = {
-                  DT_ans <- data.table::as.data.table(
-                    compareDF::compare_df(df_new = DT_temp[,..onCols],df_old = DT[,..onCols],keep_unchanged_rows = TRUE,group_col = onCols)$comparison_df
-                  )
-                  ansIssue = FALSE
-                }, error = function(e) {
-                  warning("comparedf issue - 2222222222222")
-                  print(e)
-                })
-                if(ansIssue == TRUE) {
-                  print("ansIssue")
-                  DT_ans <- data.table::rbindlist(l = list(DT,DT_temp),use.names = TRUE,fill = TRUE)
-                  if(is.null(DT_ans$chng_type)) {
-                    DT_ans[, chng_type := ""]
-                  }
-                  DT_ans[is.na(chng_type), chng_type := "="]
-                }
+          onCols <- names(DT_temp)[names(DT_temp) %in% names(DT)] # must be before idxPath & idxFile
+          doNotCompare <- c("chng_type","chng_sum", "DateCreatedIndexDate", "DateWrittenIndexDate", "DateAccessedIndexDate")
+          onCols <- onCols[!onCols %in% doNotCompare]
+          
+          if((input$compareData == TRUE)){ # data "comparison version"
+            # the logic for deciding which one is old versus new is irrelevant at this point.
+            # compare original table and table being added
+            common_DNC <- doNotCompare[doNotCompare %in% names(DT) & doNotCompare %in% names(DT_temp)] # remove 
+            rbL <- function() {
+              ansIssue = TRUE
+              tryCatch(expr = {
+                DT_ans <- data.table::as.data.table(
+                  compareDF::compare_df(df_new = DT_temp[,..onCols],df_old = DT[,..onCols],keep_unchanged_rows = TRUE,group_col = onCols)$comparison_df
+                )
+                ansIssue = FALSE
+              }, error = function(e) {
+                warning("comparedf issue - 2222222222222")
+                print(e)
+              })
+              
+              if(ansIssue == TRUE) { # common data is the same.
+                print("ansIssue")
+                DT_ans <- DT
+                DT_ans[is.na(chng_type), chng_type := "="]
+                if(is.null(DT_ans$chng_sum)) DT_ans[, chng_sum := ""]
+              }
+              
+              DT_fin <- DT_ans[!duplicated(DT_ans),]
+              DT_DNC <- DT_temp[,!..common_DNC] # if common "old" and "new" cols exist, keep only old DNC cols in the inner join for consistency. 
+              print("DT_DNC")
+              print(i)
+              print(names(DT_DNC))
+              
+              # note the order of file reading is currently arbitrary
+              
+              #DT_eq <- DT_temp[DT_DNC[DT_fin[chng_type ==  "=",],on=c(onCols)],on=c(onCols)]
+              DT_eq <- DT_DNC[DT_fin[chng_type == "=",],on=c(onCols), nomatch=NULL]
+              if(dim(DT_eq)[1]>0) DT_eq[, `:=`(chng_type = "=",
+                                               chng_sum = paste0(chng_sum,"=",i))]
+              if(ansIssue == TRUE){
+                return ( list(DT_eq) )
+              } else{
+                DT_su <- DT[DT_fin[chng_type ==  "-",],on=c(onCols)]
+                if(dim(DT_su)[1]>0) DT_su[, `:=`(chng_type = "-",
+                                                 chng_sum = paste0(chng_sum,"-",i))]
                 
-                DT_fin <- DT_ans[!duplicated(DT_ans),]
-                DT_DNC <- DT[,!..common_DNC] # if common "old" and "new" cols exist, remove DNC cols in the inner join for consistency. 
-                
-                DT_a <- DT_temp[DT_DNC[DT_fin[chng_type ==  "=",],on=c(onCols)],on=c(onCols)]
-                if(dim(DT_a)[1]>0) DT_a[, `:=`(chng_type = "=",
-                                               chng_sum = paste0(chng_sum,chng_type,i))]
-                
-                DT_b <- DT[DT_fin[chng_type ==  "-",],on=c(onCols)]
-                if(dim(DT_b)[1]>0) DT_b[, `:=`(chng_type = "-",
-                                               chng_sum = paste0(chng_sum,chng_type,i))]
-                
-                DT_c <- DT_temp[DT_fin[chng_type ==  "+",],on=c(onCols)]
-                if(dim(DT_c)[1]>0) DT_c[, `:=`(chng_type = "+",
-                                               chng_sum = paste0(chng_sum,chng_type,i))]
-                
-                list(DT_a, # unchanged
-                     DT_b, # old
-                     DT_c # new
+                DT_ad <- DT_temp[DT_fin[chng_type ==  "+",],on=c(onCols)]
+                if(dim(DT_ad)[1]>0) DT_ad[, `:=`(chng_type = "+",
+                                                 chng_sum = paste0(chng_sum,"+",i))]
+                list(DT_eq, # unchanged
+                     DT_su, # old
+                     DT_ad # new
                 )
               }
-            } else{
-              rbL <- function() list(DT_temp[DT,on=c(onCols)],DT_temp[!DT,on=c(onCols)])
             }
-            DT <- data.table::rbindlist(l = rbL(),
-                                        use.names = TRUE,
-                                        fill = TRUE)
+          } else{
+            rbL <- function() list(DT_temp[DT,on=c(onCols)],DT_temp[!DT,on=c(onCols)])
+          }
+          DT <- data.table::rbindlist(l = rbL(),
+                                      use.names = TRUE,
+                                      fill = TRUE)
         }
       }
     }
@@ -152,6 +162,7 @@ mod_4_engine_server <- function(input, output, session, r){
     r$T3 <- r$O2[Type == "File", lapply(.SD,function(x) sum(x,na.rm=T)), by = Owner, .SDcols = c("TotalByteSize", "TotalFileCount")][
       order(-TotalByteSize*TotalFileCount),
       ]
+    shinymaterial::material_spinner_show(session = session, output_id = "runtime")
     print("finished UPLOAD")
   },ignoreInit = FALSE)
   

@@ -38,10 +38,15 @@ mod_2_controller_ui <- function(id){
                              choices = unique(O2Empty$Type)[order(unique(O2Empty$Type))],
                              selected = unique(O2Empty$Type),multiple = TRUE),
           shinyWidgets::noUiSliderInput(inputId = ns("minFolderDepth"),
-                                        label = "minimum folder depth",
+                                        label = "min folder depth",
                                         min = 1,
-                                        max = 10,
-                                        value = 1,step = 1)
+                                        max = 25,
+                                        value = 1,step = 1),
+          shinyWidgets::noUiSliderInput(inputId = ns("maxFolderDepth"),
+                                        label = "max folder depth",
+                                        min = 1,
+                                        max = 25,
+                                        value = 25,step = 1),
         ),
       # ),
       # shinymaterial::material_column(
@@ -104,7 +109,7 @@ mod_2_controller_server <- function(input, output, session, r){
   ns <- session$ns
   print("RUN mod_2")
   # Change to CORE DATA
-  observeEvent(dim(r$temp),{ # run after upload
+  observeEvent(c(dim(r$O2),input$resetSearch),{ # run after upload
     print("run r$temp")
     if("DateWritten" %in% names(r$temp)){
       print("date written")
@@ -115,7 +120,7 @@ mod_2_controller_server <- function(input, output, session, r){
       shiny::updateSliderInput(session = session, inputId = ns("writtenTo"),
                                min = min(r$temp$DateWritten,na.rm=T),
                                max = as.POSIXct(Sys.time()),
-                               value = min(r$temp$DateWritten,na.rm=T))
+                               value = max(r$temp$DateWritten,na.rm=T))
     }
     if("DateCreated" %in% names(r$temp)){
       print("date created")
@@ -126,7 +131,7 @@ mod_2_controller_server <- function(input, output, session, r){
       shiny::updateSliderInput(session = session, inputId = ns("createdTo"),
                                min = min(r$temp$DateCreated,na.rm=T),
                                max = as.POSIXct(Sys.time()),
-                               value = min(r$temp$DateCreated,na.rm=T))
+                               value = max(r$temp$DateCreated,na.rm=T))
     }
     if("DateAccessed" %in% names(r$temp)){
       print("date accessed")
@@ -137,13 +142,16 @@ mod_2_controller_server <- function(input, output, session, r){
       shiny::updateSliderInput(session = session, inputId = ns("accessedTo"),
                                min = min(r$temp$DateAccessed,na.rm=T),
                                max = as.POSIXct(Sys.time()),
-                               value = min(r$temp$DateAccessed,na.rm=T))
+                               value = max(r$temp$DateAccessed,na.rm=T))
     }
     if(length(r$temp$Level)>0){
       print("level")
       shinyWidgets::updateNoUiSliderInput(session = session,inputId = ns("minFolderDepth"), 
                                           range = c(min(r$temp$Level,na.rm=T),max(r$temp$Level,na.rm=T)),
                                           value = min(r$temp$Level,na.rm=T))
+      shinyWidgets::updateNoUiSliderInput(session = session,inputId = ns("maxFolderDepth"), 
+                                          range = c(min(r$temp$Level,na.rm=T),max(r$temp$Level,na.rm=T)),
+                                          value = max(r$temp$Level,na.rm=T))
     }
     
   },ignoreInit = TRUE)
@@ -161,7 +169,7 @@ mod_2_controller_server <- function(input, output, session, r){
                                 choices = r$T3$Owner)
   },ignoreInit = TRUE)
   # SEARCH
-  observeEvent(c(input$fileOrFolder,input$minFolderDepth, 
+  observeEvent(c(input$fileOrFolder,input$minFolderDepth, input$maxFolderDepth,
                  input$createdFrom, input$createdTo, input$writtenFrom, input$writtenTo, input$accessedFrom, input$accessedTo, 
                  input$Owner, input$extensionName, input$searchString, input$ignoreCase, input$parentString,
                  input$searchString_search
@@ -170,7 +178,7 @@ mod_2_controller_server <- function(input, output, session, r){
     print(dim(r$temp))
     r$temp <- SearchModel(x = r$temp, input)
     for(i in c("searchString","parentString","ignoreCase","Owner","writtenFrom","writtenTo","accessedFrom","accessedTo",
-               "createdFrom","createdTo","extensionName","fileOrFolder","minFolderDepth") ){
+               "createdFrom","createdTo","extensionName","fileOrFolder","minFolderDepth","maxFolderDepth") ){
       r$searchOptions[[paste0(i,input$subsetSearch)]] <- unlist(input[[i]])
     }
   },ignoreInit = TRUE, priority = 0)

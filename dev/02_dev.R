@@ -48,6 +48,7 @@ golem::add_module( name = "4_engine" ) # Name of the module
 golem::add_fct( "SearchModel" ,open = TRUE) 
 golem::add_fct( "SortView"   ,open = TRUE)
 golem::add_fct( "GetO2"   ,open = TRUE)
+golem::add_fct( "GetDT"   ,open = TRUE)
 golem::add_fct( "helpers" ) 
 golem::add_utils( "helpers" )
 
