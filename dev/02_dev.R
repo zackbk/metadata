@@ -42,6 +42,7 @@ golem::add_module( name = "2_controller" ) # Name of the module
 golem::add_module( name = "2_2_subctlr" ) # Name of the module
 golem::add_module( name = "3_view" ) # Name of the module
 golem::add_module( name = "4_engine" ) # Name of the module
+golem::add_module( name = "4_1_script" ) # Name of the module
 
 ## Add helper functions ----
 ## Creates ftc_* and utils_*
@@ -66,6 +67,7 @@ usethis::use_data_raw( name = "3_fileIcons", open = TRUE )
 usethis::use_data_raw( name = "4_O2Names", open = TRUE )
 usethis::use_data_raw( name = "5_timeInit", open = TRUE )
 usethis::use_data_raw( name = "6_colClass", open = TRUE )
+usethis::use_data_raw( name = "7_rmdFile", open = TRUE )
 ## Tests ----
 ## Add one line by test you want to create
 usethis::use_test( "app" )

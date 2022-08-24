@@ -1,6 +1,6 @@
 Package: MetadataApp
 Title: Shiny Metadata App
-Version: 0.2.1.0000
+Version: 0.1.0.0000
 Authors@R: 
     person(given = "ZEKARIAS",
            family = "KEDIDA",
@@ -26,7 +26,7 @@ Imports:
     rclipboard,
     scales,
     pkgload,
-    shinymaterial,
+    shinydashboard,
     shinyalert,
     bit64,
     ggiraph,

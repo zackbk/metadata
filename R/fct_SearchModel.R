@@ -11,22 +11,6 @@ SearchModel <- function(x,input) {
   print("SearchModel")
   x <- data.table::copy(x)
   x[, filter := TRUE]
-  if("fileOrFolder" %in% names(x) & length(input$fileOrFolder)>0)
-    x[ (filter == TRUE) & 
-         !(Type %in% input$fileOrFolder),
-       filter := FALSE ]
-  if("DateCreated" %in% names(x) & length(input$createdFrom)>0 & length(input$createdTo)>0)
-    x[ (filter == TRUE) & 
-         !(DateCreated >= input$createdFrom & DateCreated <= input$createdTo),
-       filter := FALSE]
-  if("DateWritten" %in% names(x) & length(input$writtenFrom)>0 & length(input$writtenTo)>0)
-    x[ (filter == TRUE) & 
-         !(DateWritten >= input$writtenFrom & DateWritten <= input$writtenTo),
-       filter := FALSE]
-  if("DateAccessed" %in% names(x) & length(input$accessedFrom)>0 & length(input$accessedTo)>0)
-    x[ (filter == TRUE) & 
-         !(DateAccessed >= input$accessedFrom & DateAccessed <= input$accessedTo),
-       filter := FALSE]
   if (length(input$searchString) > 0) {
     if(input$searchString != "") {
       x[(filter == TRUE) & 
@@ -37,17 +21,6 @@ SearchModel <- function(x,input) {
         filter := FALSE]
     }
   }
-  if ("Level" %in% names(x) & length(input$minFolderDepth) > 0) {
-    x[(filter == TRUE) & 
-        !(Level >= input$minFolderDepth),
-      filter := FALSE ]
-  }
-  if ("Level" %in% names(x) & length(input$maxFolderDepth) > 0) {
-    x[(filter == TRUE) &
-        !(Level <= input$maxFolderDepth),
-      filter := FALSE ]
-  }
-  
   if ("Owner" %in% names(x) & length(input$Owner) > 0 ) {
     x[(filter == TRUE) & 
         !(tolower(Owner) %in% tolower(input$Owner)),

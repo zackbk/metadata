@@ -105,7 +105,9 @@ chartView <- function(rvalue = NULL, DataTab = rvalue$summaryView, chartType = "
       themeFun <- ggplot2::theme_grey
       p <- p + themeFun(base_size = 8) # + scale_colour_distiller() # (max allowed: 9)
       p <- p + ggplot2::theme(legend.position = "bottom",
-                              axis.text.x = ggplot2::element_text(angle = 45,size=14, vjust = 1, hjust=1))  
+                              axis.title = ggplot2::element_text(angle = 45,size=12, face="bold"),
+                              axis.text = ggplot2::element_text(size=13),
+                              axis.text.x = ggplot2::element_text(angle = 45,size=13, vjust = 1, hjust=1))  
       p <- p + ggplot2::guides(fill = ggiraph::guide_legend_interactive(nrow=5, byrow=TRUE,
                                                                         legend.spacing = ggplot2::unit(0, 'mm'),
                                                                         legend.key.size = ggplot2::unit(15, "mm"),

@@ -1,3 +1,14 @@
+# UI
+#' initializeFunctions
+#' @param x Value to aggregate.
+#' @param ... list of options to pass to the quantile function.
+nothing <- function(x,...) x
+quantile25 <- function(x,...) stats::quantile(x,0.25,...)
+quantile50 <- function(x,...) stats::quantile(x,0.50,...)
+quantile75 <- function(x,...) stats::quantile(x,0.75,...)
+quantile95 <- function(x,...) stats::quantile(x,0.95,...)
+
+
 toDateTime <- function(x) {
   a <- as.POSIXct(x = strptime( x, format = "%d/%m/%Y  %I:%M %p"))
   a[is.na(a)] <- as.POSIXct(x = strptime( x[is.na(a)], format = "%Y-%m-%d %H:%M:%S"))
@@ -48,15 +59,21 @@ addIcon <- function(x = NULL){
   # link: external-link-square-alt
   if(!exists("fileIcons")) load("data/fileIcons.rda")
   if(is.null(x)) x <- data.table::copy(O2Clean[,data.table::first(.SD,1),by=Type])
-  x[,ext := tolower(Extension)]
-  x <- fileIcons[x,on=c("ext")]
+  print("addIcon")
+  if('Extension' %in% names(x)) x[,ext := tolower(Extension)]
+  if('ext' %in% names(x)) x <- fileIcons[x,on=c("ext")]
   
+  if(sum(!c('Type','pathString','Extension','ico','Name') %in% names(x)) == 0) {
   x[Type %in% c("File"), link := paste('<a href="',"file:", gsub('\\\\', '/', pathString),'.',Extension, '">',ico,' ', Name, '</a>', sep = "") ]
   x[Type %in% c("Folder"), link := paste('<a href="',"file:", gsub('\\\\', '/', pathString),'/', '">',ico,' ', Name, '</a>', sep = "") ]
+  }
   
   # example: shiny::a(href = c("https://drive.google.com/"), shiny::icon('google-drive'))
   
-  x[Type %in% c("Folder"), ico := as.character(shiny::icon("folder"))]
-  x[ico %in% NA & Type %in% c("File"), ico := as.character(shiny::icon("file"))]
+  if(sum(!c('Type','ico') %in% names(x))==0) {
+    x[Type %in% c("Folder"), ico := as.character(shiny::icon("folder"))]
+    x[ico %in% NA & Type %in% c("File"), ico := as.character(shiny::icon("file"))]
+  }
+  print("finish addIcon")
   return(x)
 }

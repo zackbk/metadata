@@ -24,19 +24,9 @@ The goal of MetadataApp is to enable better content management. The app let's us
 ## Installation
 
 The metadata app is currently not available for download.
-
-``` r
-install.packages("MetadataApp")
-```
-
 ## Example
 
 Example for this app will be provided upon request from the author.
-
-```{r example, echo=FALSE}
-library(MetadataApp)
-## basic example code
-```
 
 Currently the only place to access this app is on shinyapps.io
 

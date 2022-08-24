@@ -7,7 +7,7 @@ params:
   outputParent: "NA"
   outputSummary: "NA"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-author: Zekarias Kedida, Shared Drive Tool
+author: zackbk, metadata
 ---
 # Files
 ```{r include = TRUE, echo = FALSE}

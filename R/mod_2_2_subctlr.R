@@ -11,41 +11,34 @@ mod_2_2_subctlr_ui <- function(id){
   ns <- NS(id)
   tagList(
     # shinymaterial::material_row(
-      # shinymaterial::material_column(
-        # width = 2,
-        # Controllers
-        shinyWidgets::dropMenu( # mod_3_1_viewCtlr
-          tag = shinyWidgets::actionBttn(inputId = ns("sortOptions"),"Select/Sort", style = "material-flat", color = "default", size = "md", block = FALSE, icon = icon("sort")),
-          shiny::selectInput(inputId = ns("colView"),label = "Show Columns",choices = names(O2Empty),
-                             selected = c("link","Owner","ext","DateAccessed","DateCreated","DateWritten","TotalByteSize","parentName"), multiple = TRUE),
-          shiny::selectInput(inputId = ns("arrangeBy"),label = "Arrange by",choices = c("",names(O2Empty)), multiple = FALSE),
-          shinyWidgets::switchInput(inputId = ns('order'), onLabel = "Z-A",offLabel = "A-Z",value = FALSE)
-        ),
-      # ),
-      # shinymaterial::material_column(
-        # width = 2,
-        shinyWidgets::dropMenu(
-          tag = shinyWidgets::actionBttn(inputId = ns("chartOptions"),"Table/Chart", style = "material-flat", size = "md", color = "default", block = FALSE, icon = icon("magnifying-glass-chart")),
-          shiny::selectInput(inputId = ns("xCol"), label = "X", choices = c(O2Names$cols_numeric,O2Names$cols_string,O2Names$cols_date), selected = "ext", multiple = FALSE),
-          shiny::selectInput(inputId = ns("yCol"), label = "Y", choices = c(O2Names$cols_numeric,O2Names$cols_string,O2Names$cols_date), selected = "TotalByteSize"),
-          shiny::selectInput(inputId = ns("yNumCols"), label = "Zs", choices = c(O2Names$cols_numeric), selected = "TotalFileCount", multiple = TRUE),
-          shiny::selectInput(inputId = ns("groupBy"), label = "Group By", choices = c(O2Names$cols_numeric,O2Names$cols_string,O2Names$cols_date), selected = "Level", multiple = TRUE),
-          shiny::selectInput(inputId = ns("SDfun"), label = "summarise..", choices = c("sum","nothing","mean","max","min","median","length","quantile25","quantile50","quantile75","quantile95",'cumsum'), selected = "sum", multiple = FALSE),
-          shiny::selectInput(inputId = ns("SDunit"), label = "unit", choices = c("actual","percent"), selected = "actual", multiple = FALSE)
-        ), 
-      # ),
-      # shinymaterial::material_column(
-      #   width = 2,
-        shinyWidgets::dropMenu( # mod_3_1_viewCtlr
-          tag = shinyWidgets::actionBttn(inputId = ns("displayOptions"),"Display Options", style = "material-flat", color = "default", size = "md", block = FALSE, icon = icon("uncharted")),
-          shiny::selectInput(inputId = ns("chartType"),label = "Chart type",choices = c("auto","area","boxplot","bar","col","point","density","raster","histogram","line","pie"), selected="auto"),
-          shiny::selectInput(inputId = ns("chartPkg"),label = "Chart package",choices = c("ggiraph","ggplot2","plotly","base"), selected="ggplot2",multiple = TRUE),
-          shinyWidgets::noUiSliderInput(inputId = ns("height_svg"),label = "height",min = 3,max = 20,value = 6,step = 0.25),
-          shinyWidgets::noUiSliderInput(inputId = ns("width_svg"),label = "width",min = 3,max = 20,value = 6,step = 0.25)
-        )
-      # )
-    # )
+    # shinymaterial::material_column(
+    # 
+    # shinydashboard::box(
+    # shinyWidgets::dropMenu(
+    # tag = shinyWidgets::actionBttn(inputId = ns("chartOptions"),"Table/Chart Settings", style = "material-flat", size = "md", color = "default", icon = icon("magnifying-glass-chart")),
+    # shinyWidgets::dropdown( style = "unite", icon = icon("gear"), status = "warning", animate = animateOptions( enter = animations$fading_entrances$fadeInLeftBig, exit = animations$fading_exits$fadeOutRightBig),
+    shinydashboard::box(width = 12, collapsible = TRUE,title = "Data/Table/Chart Settings",collapsed = TRUE,status = 'warning', solidHeader = TRUE,background = 'orange',
+    # shiny::tabPanel(title = "Table/Chart Settings",
+                        shinyWidgets::pickerInput(inputId = ns("colView"),label = "Table Cols",choices = names(O2Empty),
+                                           selected = c("link","Owner","ext","DateAccessed","DateCreated","DateWritten","TotalByteSize","parentName"), multiple = TRUE),
+                        shinyWidgets::pickerInput(inputId = ns("xCol"), label = "X", choices = c(O2Names$cols_numeric,O2Names$cols_string,O2Names$cols_date), selected = "ext", multiple = FALSE),
+                        shinyWidgets::pickerInput(inputId = ns("yCol"), label = "Y", choices = c(O2Names$cols_numeric,O2Names$cols_string,O2Names$cols_date), selected = "TotalByteSize"),
+                        shinyWidgets::pickerInput(inputId = ns("yNumCols"), label = "Zs", choices = c(O2Names$cols_numeric), selected = "TotalFileCount", multiple = TRUE),
+                        shinyWidgets::pickerInput(inputId = ns("groupBy"), label = "Group (color) By", choices = c(O2Names$cols_numeric,O2Names$cols_string,O2Names$cols_date), selected = "Level", multiple = TRUE),
+                        shinyWidgets::pickerInput(inputId = ns("SDfun"), label = "Summarise-by", choices = c("sum","nothing","mean","max","min","median","length","quantile25","quantile50","quantile75","quantile95",'cumsum'), selected = "sum", multiple = FALSE)
+    ),
+    shinydashboard::box(width = 12, collapsible = TRUE,title = "Settings (cont'd)",collapsed = TRUE,status = 'danger', solidHeader = TRUE,background = 'red',
+    # shiny::tabPanel(title = "Settings (cont'd)",icon = icon("gear"),
+                        shinyWidgets::pickerInput(inputId = ns("SDunit"), label = "unit", choices = c("actual","percent"), selected = "actual", multiple = FALSE),
+                        shinyWidgets::pickerInput(inputId = ns("chartType"),label = "Chart-type",choices = c("auto","area","boxplot","bar","col","point","density","raster","histogram","line","pie"), selected="auto"),
+                        shinyWidgets::pickerInput(inputId = ns("chartPkg"),label = "Chart-pkg",choices = c("ggiraph","ggplot2","plotly","base"), selected="ggplot2"),
+                        shiny::numericInput(inputId = ns("height_svg"),label = "height",min = 3,max = 20,value = 6,step = 0.25, width = '100%'),
+                        shiny::numericInput(inputId = ns("width_svg"),label = "width",min = 3,max = 20,value = 6,step = 0.25, width = '100%')
+    )
   )
+  # )
+  # )
+  # )
 }
 
 #' 2_2_subctlr Server Functions
@@ -56,64 +49,66 @@ mod_2_2_subctlr_server <-  function(input, output, session, r){
   print("RUN mod_2_2")
   
   
-  shiny::observeEvent(input$height_svg, r$height_svg <- input$height_svg)
-  shiny::observeEvent(input$width_svg, r$width_svg <- input$width_svg)
-  shiny::observeEvent(input$chartPkg, r$chartPkg <- input$chartPkg)
-  shiny::observeEvent(input$xCol, r$chartType <- input$chartType)
-  shiny::observeEvent(input$xCol, r$xCol <- input$xCol)
-  shiny::observeEvent(input$yCol, r$yCol <- input$yCol)
-  shiny::observeEvent(input$groupBy, r$groupBy <- input$groupBy)
-  shiny::observeEvent(input$SDfun, r$SDfun <- input$SDfun)
-  shiny::observeEvent(input$SDunit, r$SDunit <- input$SDunit)
+  shiny::observeEvent(input$height_svg, r$height_svg <- input$height_svg, priority = 5)
+  shiny::observeEvent(input$width_svg, r$width_svg <- input$width_svg, priority = 5)
+  shiny::observeEvent(input$chartPkg, r$chartPkg <- input$chartPkg, priority = 5)
+  shiny::observeEvent(input$chartType, r$chartType <- input$chartType, priority = 5)
+  shiny::observeEvent(input$xCol, r$xCol <- input$xCol, priority = 5)
+  shiny::observeEvent(input$yCol, r$yCol <- input$yCol, priority = 5)
+  shiny::observeEvent(input$groupBy, r$groupBy <- input$groupBy, priority = 5)
+  shiny::observeEvent(input$SDfun, r$SDfun <- input$SDfun, priority = 5)
+  shiny::observeEvent(input$SDunit, r$SDunit <- input$SDunit, priority = 5)
   
   
   observeEvent(dim(r$O2),{
     print("Run r$O2")
     
-    GetSelection <- function(y,z = NewChoices) unlist(lapply(y,function(x) x[x %in% z]))
+    GetSelection <- function(y,z = NewChoices) {
+      u <- unlist(lapply(y,function(x) x[x %in% z]))
+      if(length(u)==0) u <- z
+      return(u)
+    }
     
     NewO2Names <- GetO2Names(r$O2)
-    
+    print("NewO2Names")
+    print(NewO2Names)
     NewChoices <- names(r$O2)
     NewSelection <- GetSelection(input$colView)
-    shiny::updateSelectInput(session = session, inputId = ns("colView"),choices = NewChoices,selected = NewSelection)
-    NewChoices <- c("",names(r$O2))
-    NewSelection <- GetSelection(input$arrangeBy)
-    shiny::updateSelectInput(session = session, inputId = ns("arrangeBy"),choices = NewChoices, selected = NewSelection)
+    shinyWidgets::updatePickerInput(session = session, inputId = "colView",choices = NewChoices, selected = NewSelection)
+    
     NewChoices <- c(NewO2Names$cols_numeric,NewO2Names$cols_string,NewO2Names$cols_date)
     NewSelection <- GetSelection(input$xCol)
-    shiny::updateSelectInput(session = session, inputId = ns("xCol"), choices = NewChoices, selected = NewSelection)
+    shinyWidgets::updatePickerInput(session = session, inputId = "xCol", choices = NewChoices, selected = NewSelection[1])
+    
     NewSelection <- GetSelection(input$yCol)
-    shiny::updateSelectInput(session = session, inputId = ns("yCol"), choices = NewChoices, selected = NewSelection)
+    shinyWidgets::updatePickerInput(session = session, inputId = "yCol", choices = NewChoices, selected = NewSelection[2])
     NewSelection <- GetSelection(input$groupBy)
-    shiny::updateSelectInput(session = session, inputId = ns("groupBy"), choices = NewChoices, selected = NewSelection)
+    shinyWidgets::updatePickerInput(session = session, inputId = "groupBy", choices = NewChoices, selected = NULL)
     NewChoices <- c(NewO2Names$cols_numeric)
     NewSelection <- GetSelection(input$yNumCols)
-    shiny::updateSelectInput(session = session, inputId = ns("yNumCols"), choices = NewChoices, selected = NewSelection)
-    
-  },ignoreInit = TRUE)
+    shinyWidgets::updatePickerInput(session = session, inputId = "yNumCols", choices = NewChoices, selected = NULL)
+    print("end r$O2")
+  }, priority = 20,ignoreInit = TRUE)
   
   observeEvent(c(input$colView),{
     print("colView")
     r$colView <- unlist(input$colView)
-  }, ignoreInit = FALSE)
+  }, priority = 10, ignoreInit = FALSE)
   
   shiny::observeEvent(c(input$xCol,input$yCol,input$yNumCols,input$SDfun,input$groupBy,input$SDunit),{
+    print("run summaryInput")
     for(i in names(input) ){
       r$summaryInput[[i]] <- unlist(input[[i]])
     }
   }, priority = 10)
   
   shiny::observeEvent(c(input$xCol,input$yCol,input$yNumCols,input$SDfun,input$groupBy,input$SDunit,r$temp),{
+    print("run summaryInput")
     if(!is.null(r$summaryInput) ){
       r$summaryView <- summaryCtlr(ctlr = r$summaryInput, rvalue = r, DataTab = r$temp[filter == TRUE, ])
     }
   }, priority = 5)
   
-  observeEvent(c(input$arrangeBy,input$order),{
-    print("arrangeBy")
-    r$temp <- SortView(r$temp,input)
-  },ignoreInit = TRUE)
   
   print("End mod_2_2")
 }
