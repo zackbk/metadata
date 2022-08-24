@@ -50,7 +50,19 @@ summaryCtlr <- function(ctlr = input, rvalue = NULL, DataTab = rvalue$modelData,
       }) , .SDcols = c(rvalue$SDcols,rvalue$groupBy), by = c(rvalue$xCol)]
     }
   } else if (!is.null(SDfun)) {
-    summaryView <- DataTab[, lapply(.SD, function(x, f = SDfun) round( do.call(what = f,args = list(x, na.rm=T), quote = T) , 3) ), .SDcols = c(rvalue$SDcols), by = c(rvalue$by)]
+    tryCatch(expr = {
+      if( is.numeric(DataTab[rvalue$yCol]) ){
+        summaryView <- DataTab[, lapply(.SD, function(x, f = SDfun) round( do.call(what = f,args = list(x, na.rm=T), quote = T) , 3) ), .SDcols = c(rvalue$SDcols), by = c(rvalue$by)]        
+      } else{ # remove yCol if non-numeric
+        summaryView <- DataTab[, lapply(.SD, function(x, f = SDfun) round( do.call(what = f,args = list(x, na.rm=T), quote = T) , 3) ), .SDcols = c(rvalue$yNumCols), by = c(rvalue$by,rvalue$yCol)]        
+      }
+      }, error = function(e) {
+        print(e)
+      })
+    if(!exists('summaryView')){ # remove rounding if problematic
+      summaryView <- DataTab[, lapply(.SD, function(x, f = 'nothing') do.call(what = f,args = list(x, na.rm=T), quote = T) ), .SDcols = c(rvalue$SDcols), by = c(rvalue$by)]
+    }
+    
     if(SDunit %in% c("percent") ){ # calculate %
       summaryView <- summaryView[, lapply(.SD, function(x) {
         if(is.numeric(x)) {
@@ -59,10 +71,6 @@ summaryCtlr <- function(ctlr = input, rvalue = NULL, DataTab = rvalue$modelData,
           x
         }
         }) , .SDcols = c(rvalue$SDcols,rvalue$groupBy), by = c(rvalue$xCol)]
-    }
-    if(SDfun %in% "sum" & ("EI_MtCO2eperPJ" %in% rvalue$SDcols)) { # calculate EI
-      tempDT <- DataTab[, lapply(.SD, mean, na.rm=T), .SDcols = c("GHG_MtCO2e","Energy_PJ"), by = c(rvalue$by)] 
-      summaryView[, EI_MtCO2eperPJ := round(tempDT$GHG_MtCO2e/tempDT$Energy_PJ, 3)]
     }
   } else {
     summaryView <- DataTab[, lapply(.SD, function(x, f = "nothing") round( do.call(what = f,args = list(x, na.rm=T), quote = T) , 3) ), .SDcols = c(rvalue$SDcols), by = c(rvalue$by)]

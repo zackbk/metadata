@@ -10,40 +10,40 @@
 mod_3_view_ui <- function(id){
   ns <- NS(id)
   tagList(
-    shinyWidgets::downloadBttn(outputId = ns("export"),label = "publish (local only)", style = "material-flat", color = "default", size = "md", block = FALSE),
-    shinymaterial::material_tabs(
-      tabs = c(
-        # "I  Home" = "home_tab",
-        "I Files" = "main_tab",
-        "II SubFolders" = "parent_tab",
-        "III Summary" = "summary_tab",
-        "IV Chart" = "chart_tab"
-      )
-    ),
-    # Define tab content
-    # shinymaterial::material_tab_content(
-    #   tab_id = "home_tab",
-    #   # mod_4_engine_ui("4_engine_ui_1")
-    # ),
-    shinymaterial::material_tab_content(
-      tab_id = "main_tab",
-      DT::DTOutput(ns("Main"))
-    ),
-    shinymaterial::material_tab_content(
-      tab_id = "parent_tab",
-      DT::DTOutput(ns("Parent"))
-    ),
-    shinymaterial::material_tab_content(
-      tab_id = "summary_tab",
-      DT::DTOutput(ns("Summary"))
-    ),
-    shinymaterial::material_tab_content(
-      tab_id = "chart_tab",
-      # shiny::plotOutput(ns("Timeline"))
-      shinymaterial::material_card(title = "chart",
-                                   shiny::uiOutput(outputId = ns('Chart'))
-      )
+    shinydashboard::tabBox(width = '100hh',
+      tabPanel("Data/Files", DT::DTOutput(ns("Main"))), 
+      tabPanel("Folders", DT::DTOutput(ns("Parent"))), 
+      tabPanel("Summary Table",  DT::DTOutput(ns("Summary"))), 
+      tabPanel("Chart", shiny::uiOutput(outputId = ns('Chart')))
+      
     )
+    
+    # shinymaterial::material_tabs(
+    #   tabs = c(
+    #     "I Files" = "main_tab",
+    #     "II SubFolders" = "parent_tab",
+    #     "III Summary" = "summary_tab",
+    #     "IV Chart" = "chart_tab"
+    #   )
+    # ),
+    # shinymaterial::material_tab_content(
+    #   tab_id = "main_tab",
+    #   DT::DTOutput(ns("Main"))
+    # ),
+    # shinymaterial::material_tab_content(
+    #   tab_id = "parent_tab",
+    #   DT::DTOutput(ns("Parent"))
+    # ),
+    # shinymaterial::material_tab_content(
+    #   tab_id = "summary_tab",
+    #   DT::DTOutput(ns("Summary"))
+    # ),
+    # shinymaterial::material_tab_content(
+    #   tab_id = "chart_tab",
+    #   shinymaterial::material_card(title = "chart",
+    #                                shiny::uiOutput(outputId = ns('Chart'))
+    #   )
+    # )
   )
   
 }
@@ -54,45 +54,55 @@ mod_3_view_ui <- function(id){
 mod_3_view_server <- function(input, output, session, r){
   ns <- session$ns
   print("Run mod_3")
-  # callModule(mod_4_engine_server,"4_engine_ui_1", r)
-
+  
+  
   output$Main <- DT::renderDT({
-    r$MainView <- DT::datatable(
-      ColView(r$temp[filter == TRUE, ], r),
-      # extensions = 'Buttons',
-      options = list(
-        #dom = 'Bfrtip',
-        # buttons = list(
-        #   list(
-        #     extend = "copy", 
-        #     text = "COPY", 
-        #     title = NULL
-        #   )
-        # ),
-        sDom  = '<"top">flrt<"bottom">ip'),
-      escape = FALSE ) %>% DT::formatStyle('ext',
-                                           target = 'row',
-                                           backgroundColor = DT::styleEqual(fileIcons$ext, fileIcons$bg_clr )) 
-    # %>% DT::formatStyle('ext', target = 'cell',background = DT::styleEqual(fileIcons$ext, fileIcons$ico ))
+    print("main")
+    if('ext' %in% names(r$temp)) {
+      r$MainView <- DT::datatable(
+        ColView(r$temp[filter == TRUE, ], r),
+        options = list(#scrollX = TRUE#,
+          sDom  = '<"top">flrt<"bottom">ip'
+        ),
+        escape = FALSE ) %>% DT::formatStyle('ext',
+                                             target = 'row',
+                                             backgroundColor = DT::styleEqual(fileIcons$ext, fileIcons$bg_clr ))   
+    } else{
+      r$MainView <- DT::datatable(
+        ColView(r$temp[filter == TRUE, ], r),
+        options = list(#scrollX = TRUE#,
+          sDom  = '<"top">flrt<"bottom">ip'
+        ),
+        escape = FALSE )
+    }
+    print("end main")
     r$MainView
   })
   
   output$Parent <- DT::renderDT({ 
-    r$ParentView <- DT::datatable( 
-      ColView(r$temp[filter == TRUE, 
-                     lapply(.SD,function(x) sum(x,na.rm=T)),
-                     by = c("parentName","parentID","Level"),
-                     .SDcols = c("TotalByteSize","TotalFileCount")], r, other = c('link','Owner','DateAccessed','Level','TotalByteSize','TotalFileCount') ) ,
-      options = list(sDom  = '<"top">flrt<"bottom">ip'), # 'f' is the filter.
-      escape = FALSE)
+    print("parent")
+    if(sum(!c('') %in% names(r$temp)) == 0 ){
+      r$ParentView <- DT::datatable( 
+        ColView(r$temp[filter == TRUE, 
+                       lapply(.SD,function(x) sum(x,na.rm=T)),
+                       by = c("parentName","parentID","Level"),
+                       .SDcols = c("TotalByteSize","TotalFileCount")], r, other = c('link','Owner','DateAccessed','Level','TotalByteSize','TotalFileCount') ) ,
+        options = list(sDom  = '<"top">flrt<"bottom">ip'), # 'f' is the filter.
+        escape = FALSE)      
+    }  else{
+      r$SummaryView
+    }
+    print("end parent")
     r$ParentView
   })
   
   output$Summary <- DT::renderDT({
+    print("summaryView")
     r$summaryView 
   })
   
-  output$Chart <- shiny::renderUI({  
+  output$Chart <- shiny::renderUI({
+    print("ChartView")
     r$ChartView <- lapply(r$chartPkg,
                           function(x) {
                             if(x %in% "ggplot2"){
@@ -110,49 +120,6 @@ mod_3_view_server <- function(input, output, session, r){
     tagList(r$ChartView)
   })
   
-  
-  output$export <- shiny::downloadHandler(
-    filename = function() {
-      "searchResults.html"
-    },
-    content = function(fName) {
-      # fName <- gsub("\\\\","/",tempfile())
-      # DT::saveWidget(r$MainView,file = fName)
-      # shinyalert::shinyalert(title = "Result(s) saved to", text = exportFile)
-      
-      rmarkdown::render(input = "R/Export.Rmd",
-                        output_file = fName,
-                        output_format = "html_document",
-                        params = list('outputMain' = r$MainView,
-                                      'outputParent' = r$ParentView,
-                                      'outputSummary' = DT::datatable(r$summaryView),
-                                      'outputSearchOptions' = r$searchOptions),
-                        envir = new.env(parent = parent.frame())
-      )
-    }
-  )
-  
-  
-  
-  # shinymaterial::material_spinner_show(session = session,output_id = ns('Timeline'))
-  # p <- ggplot2::ggplot(r$temp[filter == TRUE, ])
-  # p <- p + ggplot2::geom_point(ggplot2::aes(x = DateCreated, y = TotalFileCount, fill = TotalByteSize))
-  # diff_r <- max(r$temp[filter == TRUE, DateCreated]) - min(r$temp[filter == TRUE, DateCreated])
-  # print("diff_r")
-  # print(diff_r)
-  # if(diff_r < 1){
-  #   p <- p + ggplot2::scale_x_datetime(labels = scales::date_format("%y %m %d %H:%M:%S"))
-  # } else if(diff_r < 10){
-  #   p <- p + ggplot2::scale_x_datetime(labels = scales::date_format("%y %m %d %H"))
-  # } else if(diff_r < 100){
-  #   p <- p + ggplot2::scale_x_datetime(labels = scales::date_format("%y %m %d"))
-  # } else if(diff_r < 1000){
-  #   p <- p + ggplot2::scale_x_datetime(labels = scales::date_format("%y %m"))
-  # } else{
-  #   p <- p + ggplot2::scale_x_datetime(labels = scales::date_format("%y"))
-  # }
-  # shinymaterial::material_spinner_hide(session = session,output_id = ns('Timeline'))
-  # p 
   
   print("End mod_3")
 }
