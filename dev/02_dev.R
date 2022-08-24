@@ -68,6 +68,7 @@ usethis::use_data_raw( name = "4_O2Names", open = TRUE )
 usethis::use_data_raw( name = "5_timeInit", open = TRUE )
 usethis::use_data_raw( name = "6_colClass", open = TRUE )
 usethis::use_data_raw( name = "7_rmdFile", open = TRUE )
+usethis::use_data_raw( name = "8_sampleDT", open = TRUE )
 ## Tests ----
 ## Add one line by test you want to create
 usethis::use_test( "app" )

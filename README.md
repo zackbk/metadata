@@ -16,9 +16,7 @@ visualise the output using the built-in functionalities of the app.
 
 ## Installation
 
-The metadata app is currently not available for download. \#\# Example
-
-Example for this app will be provided upon request from the author.
+The metadata app is currently not available for download.
 
 Currently the only place to access this app is on shinyapps.io (and
 directly from the public GitHub repository).

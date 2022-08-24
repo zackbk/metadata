@@ -10,13 +10,15 @@ app_ui <- function(request) {
     golem_add_external_resources(),
     # List the first level UI elements here 
     
-    shinydashboard::dashboardPage(skin = "purple",
-      shinydashboard::dashboardHeader(title = "Metadata lite"),
+    shinydashboard::dashboardPage(#skin = "purple",
+      shinydashboard::dashboardHeader(title = "Metadata lite v.0.1.0"),
       shinydashboard::dashboardSidebar(width = '300px',
         tags$style(
           "#sidebarItemExpanded {
+            position: fixed;
             overflow: auto;
             max-height: 100vh;
+            max-width: 300px;
         }"), disable = FALSE,collapsed = FALSE,
         
         # shinydashboard::box(width = 6, collapsible = TRUE,title = "Search",collapsed = FALSE,status = 'success', solidHeader = TRUE,
@@ -26,12 +28,12 @@ app_ui <- function(request) {
                             mod_4_1_script_ui("4_1_script_ui_1"),
                             shiny::helpText(icon("info"),"use task scheduler to auto-run scripts")
         ),
-        shinydashboard::box(width = 12, collapsible = TRUE,title = "II. Upload/Download",collapsed = FALSE,status = 'success', solidHeader = TRUE,background = 'teal',
+        shinydashboard::box(width = 12, collapsible = TRUE,title = "II. Upload/Download",collapsed = TRUE,status = 'success', solidHeader = TRUE,background = 'teal',
                             mod_4_engine_ui("4_engine_ui_1"),
                             shiny::helpText("Use this module to convert the script data into a readable csv"),
                             shiny::helpText(icon("info"),"Data is temporarily stored on shinyapps.io servers"),
                             shiny::helpText("Each Shiny application runs in its own protected environment and access is always SSL encrypted"),
-                            shiny::helpText(icon("warning"),"shinyapps.io deletes all uploaded sessions if the connection times out (set to 2 minutes) or the session is closed")
+                            shiny::helpText(icon("circle-exclamation"),"shinyapps.io deletes all uploaded sessions if the connection times out (set to 5 minutes) or the session is closed")
         ),
         mod_2_2_subctlr_ui("2_2_subctlr_ui_1")
         

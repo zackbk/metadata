@@ -7,8 +7,9 @@
 app_server <- function( input, output, session ) {
   # List the first level callModules here
   print("run app_server")
+  
   r <- reactiveValues(temp = data.table::copy(O2Empty)[, filter := TRUE],
-                      O2 = O2Empty,
+                      O2 = sampleDT$mtcars, # O2Empty,
                       T2 = T2Empty, T3 = T3Empty,
                       WCA = character(0),timefield = character(0),
                       FName = character(0), drives = character(0)
@@ -19,6 +20,7 @@ app_server <- function( input, output, session ) {
     warning("cannot write html template")
     print(e)
   })
+  
   
  # callModule(mod_1_body_server, "1_body_ui_1", r)
   callModule(mod_4_engine_server,"4_engine_ui_1", r)

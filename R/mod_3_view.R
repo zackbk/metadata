@@ -10,12 +10,12 @@
 mod_3_view_ui <- function(id){
   ns <- NS(id)
   tagList(
-    shinydashboard::tabBox(width = '100hh',
-      tabPanel("Data/Files", DT::DTOutput(ns("Main"))), 
-      tabPanel("Folders", DT::DTOutput(ns("Parent"))), 
-      tabPanel("Summary Table",  DT::DTOutput(ns("Summary"))), 
-      tabPanel("Chart", shiny::uiOutput(outputId = ns('Chart')))
-      
+    shinydashboard::tabBox(
+      width = '100hh',
+      tabPanel("Data", DT::DTOutput(ns("Main"))), 
+      tabPanel("Chart", shiny::uiOutput(outputId = ns('Chart'))),
+      tabPanel("Summary",  DT::DTOutput(ns("Summary"))),
+      tabPanel("Folders", DT::DTOutput(ns("Parent")))
     )
     
     # shinymaterial::material_tabs(
@@ -61,18 +61,18 @@ mod_3_view_server <- function(input, output, session, r){
     if('ext' %in% names(r$temp)) {
       r$MainView <- DT::datatable(
         ColView(r$temp[filter == TRUE, ], r),
-        options = list(#scrollX = TRUE#,
+        options = list(scrollX = TRUE,
           sDom  = '<"top">flrt<"bottom">ip'
-        ),
+        ),filter = "top",
         escape = FALSE ) %>% DT::formatStyle('ext',
                                              target = 'row',
                                              backgroundColor = DT::styleEqual(fileIcons$ext, fileIcons$bg_clr ))   
     } else{
       r$MainView <- DT::datatable(
         ColView(r$temp[filter == TRUE, ], r),
-        options = list(#scrollX = TRUE#,
+        options = list(scrollX = TRUE,
           sDom  = '<"top">flrt<"bottom">ip'
-        ),
+        ),filter = "top",
         escape = FALSE )
     }
     print("end main")

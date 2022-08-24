@@ -8,11 +8,55 @@ quantile50 <- function(x,...) stats::quantile(x,0.50,...)
 quantile75 <- function(x,...) stats::quantile(x,0.75,...)
 quantile95 <- function(x,...) stats::quantile(x,0.95,...)
 
-
+# Auto-detect date and time
+#' @param x character vector with dates.
+#' @return a POSTIXct object with dates.
 toDateTime <- function(x) {
+  # may want to do only unique cases and re-join after
+  
+  # v0.0.1 force (windows script)
+  a <- x
   a <- as.POSIXct(x = strptime( x, format = "%d/%m/%Y  %I:%M %p"))
   a[is.na(a)] <- as.POSIXct(x = strptime( x[is.na(a)], format = "%Y-%m-%d %H:%M:%S"))
   a
+  
+  # v.0.1.0 - detect from first 100 items
+  ainit <- data.table::data.table(sample = x[1:min(100,length(x))])
+
+  prefix <- "" # "lubridate::" # do.call requires package to be attached. See DESCRIPTION.
+  # 1 - y, 2 - ym/my,md/dm,/
+  fcs <- c("ymd","ydm","mdy","myd","dmy","dym",
+           "ymd_h","ydm_h","mdy_h","dmy_h",
+           "ymd_hm","ydm_hm","mdy_hm","dmy_hm",
+           "ymd_hms","ydm_hms","mdy_hms","dmy_hms",
+           "my","ym","yq" 
+           )
+  pFcs <- paste0(prefix,fcs)
+  for(i in pFcs) ainit[, (i) := do.call(what = i,args = list(sample),quote = T)]
+  
+  allFormats <- ainit[,!"sample"][,lapply(.SD,function(y) sum(!is.na(y))),] # calculate formats
+  
+  # if(max(ainit[,apply(.SD,2,function(z) sum(!is.na(z))),.SDcols=c(pFcs)])==dim(ainit)[1]) { 
+    # good (or most common) format
+    fcsFinal <- names(which.max(allFormats))[1] # find the best format for the sample
+    a[is.na(a)] <- as.POSIXct( x = do.call(what = fcsFinal, args = list(x[is.na(a)]),quote = T) )
+  # }
+    # exceptional cases (doesn't always work esp with small sample sizes)
+    #fcsCandidates <- names(allFormats)[which(allFormats>0)] # for 100 samples, the ones found
+    ana <- data.table::data.table(sample = x[is.na(a)])
+    for(i in pFcs) ana[, (i) := do.call(what = i,args = list(sample),quote = T)]
+    #iris[, maximum_element := do.call(pmax, .SD), .SDcols = 1:4]
+          
+    ana[,val := 1 + min(which(!is.na(.SD))),by=c("sample"),.SDcols = c(pFcs)] # first match accepted
+    a[is.na(a)] <- ana[,apply(.SD,1,function(z) z[as.numeric(z["val"])] )] # return first match
+    
+    # future functionality for machine dates (# seconds or days since 1970-01-01 00:00:00 UTC) 
+  if(sum(is.na(a))==length(x)){ # most likely nto a date object, return original values
+    warning("column with a date label is most likely not a date value, returning original column")
+    x
+  } else{
+    a 
+  }
 }
 
 #' classifies the names of the input data table by class
@@ -27,7 +71,7 @@ GetO2Names <- function(y){
   yNames$cols_numeric <- temp_1[order(temp_1)]
   temp_2 <- unique(names(y)[sapply(y, function(x) is.character(x) | is.logical(x))])
   yNames$cols_string <- temp_2[order(temp_2)]
-  yNames$cols_date <- names(y)[data.table::like(names(y),"Date")]
+  yNames$cols_date <- names(y)[grepl("date",names(y),ignore.case = TRUE)]
   return(yNames)  
 }
 
