@@ -28,6 +28,6 @@ The metadata app is currently not available for download.
 
 Example for this app will be provided upon request from the author.
 
-Currently the only place to access this app is on shinyapps.io
+Currently the only place to access this app is on shinyapps.io (and directly from the public GitHub repository).
 
 https://client.shinyapps.io/MetadataApp_zhVqFYg6LV947ZFEJfHTpyKdQQ
