@@ -51,9 +51,11 @@ summaryCtlr <- function(ctlr = input, rvalue = NULL, DataTab = rvalue$modelData,
     }
   } else if (!is.null(SDfun)) {
     tryCatch(expr = {
-      if( is.numeric(DataTab[rvalue$yCol]) ){
+      if( is.numeric(DataTab[[rvalue$yCol]]) ){
+        print("numeric")
         summaryView <- DataTab[, lapply(.SD, function(x, f = SDfun) round( do.call(what = f,args = list(x, na.rm=T), quote = T) , 3) ), .SDcols = c(rvalue$SDcols), by = c(rvalue$by)]        
       } else{ # remove yCol if non-numeric
+        print("non-numeric")
         summaryView <- DataTab[, lapply(.SD, function(x, f = SDfun) round( do.call(what = f,args = list(x, na.rm=T), quote = T) , 3) ), .SDcols = c(rvalue$yNumCols), by = c(rvalue$by,rvalue$yCol)]        
       }
       }, error = function(e) {

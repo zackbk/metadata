@@ -17,21 +17,21 @@ mod_2_2_subctlr_ui <- function(id){
     # shinyWidgets::dropMenu(
     # tag = shinyWidgets::actionBttn(inputId = ns("chartOptions"),"Table/Chart Settings", style = "material-flat", size = "md", color = "default", icon = icon("magnifying-glass-chart")),
     # shinyWidgets::dropdown( style = "unite", icon = icon("gear"), status = "warning", animate = animateOptions( enter = animations$fading_entrances$fadeInLeftBig, exit = animations$fading_exits$fadeOutRightBig),
-    shinydashboard::box(width = 12, collapsible = TRUE,title = "iii. Data/Chart",collapsed = FALSE,status = 'warning', solidHeader = TRUE,background = 'orange',
+    shinydashboard::box(width = 12, collapsible = TRUE,title = "iii. Data/Chart",collapsed = TRUE,status = 'warning', solidHeader = TRUE,background = 'orange',
                         # shiny::tabPanel(title = "Table/Chart Settings",
-                        shinyWidgets::pickerInput(inputId = ns("xCol"), label = "X", choices = c(O2Names$cols_numeric,O2Names$cols_string,O2Names$cols_date), selected = "ext", multiple = FALSE),
+                        shinyWidgets::pickerInput(inputId = ns("colView"),label = "Columns",choices = names(O2Empty),
+                                                  selected = c("link","Owner","ext","DateAccessed","DateCreated","DateWritten","TotalByteSize","parentName"), multiple = TRUE),
+                        shinyWidgets::pickerInput(inputId = ns("xCol"), label = "X", choices = c(O2Names$cols_numeric,O2Names$cols_string,O2Names$cols_date), selected = "Level", multiple = FALSE),
                         shinyWidgets::pickerInput(inputId = ns("yCol"), label = "Y", choices = c(O2Names$cols_numeric,O2Names$cols_string,O2Names$cols_date), selected = "TotalByteSize"),
                         shinyWidgets::pickerInput(inputId = ns("yNumCols"), label = "Zs", choices = c(O2Names$cols_numeric), selected = "TotalFileCount", multiple = TRUE),
-                        shinyWidgets::pickerInput(inputId = ns("groupBy"), label = "Group (color) By", choices = c(O2Names$cols_numeric,O2Names$cols_string,O2Names$cols_date), selected = "Level", multiple = TRUE),
-                        shinyWidgets::pickerInput(inputId = ns("SDfun"), label = "Summarise-by", choices = c("sum","nothing","mean","max","min","median","length","quantile25","quantile50","quantile75","quantile95",'cumsum'), selected = "sum", multiple = FALSE),
-                        shinyWidgets::pickerInput(inputId = ns("colView"),label = "Table Cols",choices = names(O2Empty),
-                                                  selected = c("link","Owner","ext","DateAccessed","DateCreated","DateWritten","TotalByteSize","parentName"), multiple = TRUE)
+                        shinyWidgets::pickerInput(inputId = ns("groupBy"), label = "Group (color) By", choices = c(O2Names$cols_numeric,O2Names$cols_string,O2Names$cols_date), selected = "ext", multiple = TRUE),
+                        shinyWidgets::pickerInput(inputId = ns("SDfun"), label = "Summarise-by", choices = c("sum","nothing","mean","max","min","median","length","quantile25","quantile50","quantile75","quantile95",'cumsum'), selected = "sum", multiple = FALSE)
     ),
     shinydashboard::box(width = 12, collapsible = TRUE,title = "iv. Adv Chart",collapsed = TRUE,status = 'danger', solidHeader = TRUE,background = 'red',
                         # shiny::tabPanel(title = "Settings (cont'd)",icon = icon("gear"),
                         shinyWidgets::pickerInput(inputId = ns("SDunit"), label = "unit", choices = c("actual","percent"), selected = "actual", multiple = FALSE),
-                        shinyWidgets::pickerInput(inputId = ns("chartType"),label = "Chart-type",choices = c("auto","area","boxplot","bar","col","point","density","raster","histogram","line","pie"), selected="auto"),
-                        shinyWidgets::pickerInput(inputId = ns("chartPkg"),label = "Chart-pkg",choices = c("ggiraph","ggplot2","plotly","base"), selected="plotly"),
+                        shinyWidgets::pickerInput(inputId = ns("chartType"),label = "Chart-type",choices = c("auto","area","boxplot","bar","col","point","density","raster","histogram","line","pie"), selected="col"),
+                        shinyWidgets::pickerInput(inputId = ns("chartPkg"),label = "Chart-pkg",choices = c("ggiraph","ggplot2","plotly","base"), selected="ggplot2"),
                         shiny::numericInput(inputId = ns("height_svg"),label = "height",min = 3,max = 20,value = 6,step = 0.25, width = '100%'),
                         shiny::numericInput(inputId = ns("width_svg"),label = "width",min = 3,max = 20,value = 6,step = 0.25, width = '100%')
     )
@@ -62,31 +62,30 @@ mod_2_2_subctlr_server <-  function(input, output, session, r){
   
   observeEvent(dim(r$O2),{
     print("Run r$O2")
-    
-    GetSelection <- function(y,z = NewChoices) {
-      u <- unlist(lapply(y,function(x) x[x %in% z]))
-      if(length(u)==0) u <- z
-      return(u)
-    }
-    
+    r$temp <- data.table::copy(r$O2)
+    r$temp[, filter := TRUE]
+	
     NewO2Names <- GetO2Names(r$O2)
     print("NewO2Names")
     print(NewO2Names)
     NewChoices <- names(r$O2)
-    NewSelection <- GetSelection(input$colView)
+    NewSelection <- GetSelection(input$colView, NewChoices)
     shinyWidgets::updatePickerInput(session = session, inputId = "colView",choices = NewChoices, selected = NewSelection)
     
     NewChoices <- c(NewO2Names$cols_date,NewO2Names$cols_numeric,NewO2Names$cols_string)
-    NewSelection <- GetSelection(input$xCol)
+    NewSelection <- GetSelection(c('Level','make'),input$xCol, NewChoices)
     shinyWidgets::updatePickerInput(session = session, inputId = "xCol", choices = NewChoices, selected = NewSelection[1])
     
-    NewSelection <- GetSelection(input$yCol)
-    shinyWidgets::updatePickerInput(session = session, inputId = "yCol", choices = NewChoices, selected = NewSelection[2])
-    NewSelection <- GetSelection(input$groupBy)
-    shinyWidgets::updatePickerInput(session = session, inputId = "groupBy", choices = NewChoices, selected = NewSelection[3])
+    NewSelection <- GetSelection(c('TotalByteSize','mpg'),input$yCol, NewChoices)
+    shinyWidgets::updatePickerInput(session = session, inputId = "yCol", choices = NewChoices, selected = NewSelection[1])
+    
+    NewSelection <- GetSelection(c('ext','model'),input$groupBy, NewChoices)
+    shinyWidgets::updatePickerInput(session = session, inputId = "groupBy", choices = NewChoices, selected = NewSelection)
+    
     NewChoices <- c(NewO2Names$cols_numeric)
-    NewSelection <- GetSelection(input$yNumCols)
-    shinyWidgets::updatePickerInput(session = session, inputId = "yNumCols", choices = NewChoices, selected = NULL)
+    NewSelection <- GetSelection(c('TotalByteSize'),input$yNumCols, NewChoices)
+    
+    shinyWidgets::updatePickerInput(session = session, inputId = "yNumCols", choices = NewChoices, selected = NewSelection)
     print("end r$O2")
   }, priority = 20,ignoreInit = FALSE)
   

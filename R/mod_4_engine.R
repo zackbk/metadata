@@ -12,13 +12,9 @@ mod_4_engine_ui <- function(id){
   tagList(
     #HTML("<br> <b> 2. Produce table (from .txt result) </b> <br>"),
     shiny::fileInput(inputId = ns("uploadIndex"),label = "Upload",multiple = TRUE), # also processes the file
-    # shiny::plotOutput(outputId = "runtime",height = 1),
-    # shinyWidgets::progressBar(id = ns("runtime"), value = 0, total = 100, title = "", display_pct = TRUE),
-    #shinyWidgets::actionBttn(inputId = ns("exampleData"),icon = icon("car"),color = 'success',size = 'sm', style = 'material-flat',block=FALSE),
-    shinyWidgets::pickerInput(inputId = ns("pickData"),choices = c("auto","mtcars"),selected = "auto",multiple = FALSE),
+    shinyWidgets::pickerInput(inputId = ns("pickData"),choices = c("auto","MLFB","mtcars"),selected = "auto",multiple = FALSE),
     shinyWidgets::downloadBttn(outputId = ns("downloadData"),label = "DL", size = "sm",color = 'primary', style = 'material-flat'), # allows the user to download the final processed info (in .RData for starters)
-    shinyWidgets::actionBttn(inputId = ns("clear"),icon = icon("trash"),color = 'danger',size = 'sm', style = 'material-flat',block=FALSE)
-    
+    shinyWidgets::actionBttn(inputId = ns("clear"),icon = icon("trash"),color = 'danger',size = 'sm', style = 'material-flat')
   )
 }
 
@@ -77,6 +73,7 @@ mod_4_engine_server <- function(input, output, session, r){
       }
       shinyWidgets::updateProgressBar(session = session,id = ns("runtime"), value = 10 + 40*(1/iMax) + 80*((i-1)/iMax)) 
       
+      #hotfix
       names(DT_temp) <- gsub("[,.|\\()]",".",names(DT_temp))
       names(DT_temp) <- gsub("[/\\]","div",names(DT_temp))
       names(DT_temp) <- gsub("[%]","pct",names(DT_temp))
@@ -129,7 +126,7 @@ mod_4_engine_server <- function(input, output, session, r){
     names(sampleDT)[j] <- input$uploadIndex$name[i]
     
     shinyWidgets::updatePickerInput(session = session,inputId = 'pickData', selected = 'auto',
-                                    choices = names(sampleDT))
+                                    choices = c('auto',names(sampleDT)))
     
     r$O2 <- sampleDT[[j]]
       
@@ -143,12 +140,24 @@ mod_4_engine_server <- function(input, output, session, r){
       order(-TotalByteSize*TotalFileCount),
       ]
     }
-    
-    shinyWidgets::closeSweetAlert(session = session)
-    shinyWidgets::sendSweetAlert(session = session, title =" Processing complete!",type = "success")
     print("finished UPLOAD")
   },ignoreInit = FALSE)
   
+  
+  observeEvent(dim(r$O2),{
+    if(sum(!c('Type','ext',"TotalByteSize", "TotalFileCount",'Owner') %in% names(r$O2)) == 0){
+      
+      r$T2 <- r$O2[Type == "File", lapply(.SD,function(x) sum(x,na.rm=T)), by = ext, .SDcols = c("TotalByteSize", "TotalFileCount")][
+        order(-TotalByteSize*TotalFileCount),
+        ]
+      
+      r$T3 <- r$O2[Type == "File", lapply(.SD,function(x) sum(x,na.rm=T)), by = Owner, .SDcols = c("TotalByteSize", "TotalFileCount")][
+        order(-TotalByteSize*TotalFileCount),
+        ]
+    }
+    shinyWidgets::sendSweetAlert(session = session, title =" Processing complete!",type = "success")
+    shinyWidgets::closeSweetAlert(session = session)
+  })
   
   output$downloadData <- shiny::downloadHandler(
     filename = function() {

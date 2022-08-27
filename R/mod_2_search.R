@@ -1,4 +1,4 @@
-#' 2_controller UI Function
+#' 2_search UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,69 +7,49 @@
 #' @noRd 
 #'
 #' @importFrom shiny NS tagList 
-mod_2_controller_ui <- function(id){
+mod_2_search_ui <- function(id){
   ns <- NS(id)
   tagList(
     # search bar : 
     # 
-    # shinymaterial::material_row(
-    # shinymaterial::material_column(
-      # width =  6,
+    shiny::fluidRow(
       shinyWidgets::searchInput(inputId = ns("searchString"), #label = "Search",
-                                placeholder = "Search File Name",width = "100%"),
-    # ),
-      # shinymaterial::material_column(
-        # width = 3,
-        shinyWidgets::actionBttn(inputId = ns("searchString_search"),icon = icon("search"),style = "material-flat",size = "xs",block = FALSE ),
-      # ),
-      # shinymaterial::material_column(
-        # width = 3,
-        shinyWidgets::actionBttn(inputId = ns("searchString_reset"),icon = icon("remove"),style = "material-flat",size = "xs",block = FALSE  ),
-      # )
-    # ),
-    # shinymaterial::material_row(
-      # search settings
-      # shinymaterial::material_column(
-        # width = 4,
-        # shinyWidgets::dropMenu(
-          # tag = shinyWidgets::actionBttn(inputId = ns("folderOptions"),"Folder(s)", style = "material-flat", color = "default", size = "md", block = FALSE, icon = icon("folder")),
-          shinyWidgets::searchInput(inputId = ns("parentString"), label = "", placeholder = "Folder (if known)",btnSearch = icon("search-plus",lib = "font-awesome")),
-          # shiny::selectInput(inputId = ns("fileOrFolder"),label = "Type",
-          #                    choices = unique(O2Empty$Type)[order(unique(O2Empty$Type))],
-          #                    selected = unique(O2Empty$Type),multiple = TRUE),
-          # shinyWidgets::noUiSliderInput(inputId = ns("minFolderDepth"),
-          #                               label = "min folder depth",
-          #                               min = 1,
-          #                               max = 25,
-          #                               value = 1,step = 1),
-          # shinyWidgets::noUiSliderInput(inputId = ns("maxFolderDepth"),
-          #                               label = "max folder depth",
-          #                               min = 1,
-          #                               max = 25,
-          #                               value = 25,step = 1),
-        # ),
-      # ),
-      # shinymaterial::material_column(
-        # width = 4,
-        # filter :
-        shinyWidgets::dropMenu(
-          tag = shinyWidgets::actionBttn(inputId = ns("filterBy"),"Filter", style = "material-flat", color = "default", size = "md", block = FALSE, icon = icon("filter")),
-          shiny::checkboxInput(inputId = ns("ignoreCase"), label = "ignore_case", value = TRUE),
-          shinyWidgets::pickerInput(inputId = ns("Owner"), label = "Owner",
-                                choices = T3Empty$Owner,
-                                multiple = TRUE),
-          shinyWidgets::pickerInput(inputId = ns("extensionName"), label = "extension (if it's a file)",
-                                choices = T2Empty$ext,
-                                multiple = TRUE)
-        )
-    # )
+                                placeholder = "File Name",width = "100%"),
+      # advanced search
+      shinyWidgets::searchInput(inputId = ns("parentString"), label = "", placeholder = "Folder",btnSearch = icon("search-plus",lib = "font-awesome")),
+      # shinyWidgets::actionBttn(inputId = ns("searchString_search"),icon = icon("search"),style = "material-flat",size = "xs"),
+      shinyWidgets::actionBttn(inputId = ns("searchString_reset"),label = 'clear',icon = icon("remove"),style = "material-flat",size = "xs")
+    ),
+    # shiny::selectInput(inputId = ns("fileOrFolder"),label = "Type",
+    #                    choices = unique(O2Empty$Type)[order(unique(O2Empty$Type))],
+    #                    selected = unique(O2Empty$Type),multiple = TRUE),
+    # shinyWidgets::noUiSliderInput(inputId = ns("minFolderDepth"),
+    #                               label = "min folder depth",
+    #                               min = 1,
+    #                               max = 25,
+    #                               value = 1,step = 1),
+    # shinyWidgets::noUiSliderInput(inputId = ns("maxFolderDepth"),
+    #                               label = "max folder depth",
+    #                               min = 1,
+    #                               max = 25,
+    #                               value = 25,step = 1),
+    # filter :
+    shiny::checkboxInput(inputId = ns("ignoreCase"), label = "ignore_case", value = TRUE),
+    shinyWidgets::pickerInput(inputId = ns("Owner"), label = "Owner",
+                              choices = T3Empty$Owner,
+                              inline = TRUE,
+                              multiple = TRUE),
+    shinyWidgets::pickerInput(inputId = ns("extensionName"), label = "extension (if it's a file)",
+                              choices = T2Empty$ext,
+                              inline = TRUE,
+                              multiple = TRUE)
   )
 }
 
-#' 2_controller Server Function
+#' 2_search Server Function
 #'
 #' @noRd 
-mod_2_controller_server <- function(input, output, session, r){
+mod_2_search_server <- function(input, output, session, r){
   ns <- session$ns
   print("RUN mod_2")
   # Change to CORE DATA
@@ -125,18 +105,20 @@ mod_2_controller_server <- function(input, output, session, r){
     # probably a better way to do than DIM, but for now this is ok.
     print('run dim(r$T2)')
     shinyWidgets::updatePickerInput(session = session, inputId = "extensionName",
-                                choices = r$T2$ext)
-  },ignoreInit = TRUE)
+                                    choices = r$T2$ext)
+  },ignoreInit = FALSE)
   observeEvent(c(dim(r$T3)),{
     print('run dim(r$T3)')
     shinyWidgets::updatePickerInput(session = session, inputId = "Owner",
-                                choices = r$T3$Owner)
-  },ignoreInit = TRUE)
+                                    choices = r$T3$Owner)
+  },ignoreInit = FALSE)
   # SEARCH
   observeEvent(c(input$searchString, 
                  input$ignoreCase, 
                  input$parentString,
-                 input$searchString_search
+                 input$extensionName,
+                 input$Owner
+                 # input$searchString_search
   ), {
     print("search")
     print(dim(r$temp))
@@ -147,14 +129,13 @@ mod_2_controller_server <- function(input, output, session, r){
                # ,"accessedFrom","accessedTo",
                # "createdFrom","createdTo",
                "extensionName"
-               ) ){
+    ) ){
       r$searchOptions[[paste0(i)]] <- unlist(input[[i]])
     }
   },ignoreInit = TRUE, priority = 0)
   
   
-  observeEvent(c(input$searchString_reset,dim(r$O2)
-                 ), {
+  observeEvent(c(input$searchString_reset), {
     print("reset")
     r$temp <- data.table::copy(r$O2)
     r$temp[, filter := TRUE]

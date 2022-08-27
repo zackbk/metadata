@@ -1,4 +1,4 @@
-## code to prepare `3_fileIcons` dataset goes here
+## code to prepare `fileIcons` dataset goes here
 fileIcons <- data.table::fread("data-raw/fileIcons.csv")
 fileIcons <- fileIcons[,lapply(.SD,function(x) unlist(strsplit(tolower(x),split = ","))),by=.(fileIcon,bg_clr,fileType),.SDcols=c('ext')]
 fileIcons[,ico := sapply(fileIcons$fileIcon,function(z){ 

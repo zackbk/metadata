@@ -12,38 +12,12 @@ mod_3_view_ui <- function(id){
   tagList(
     shinydashboard::tabBox(
       width = '100hh',
-      tabPanel("Data", DT::DTOutput(ns("Main"))), 
-      tabPanel("Chart", shiny::uiOutput(outputId = ns('Chart'))),
-      tabPanel("Summary",  DT::DTOutput(ns("Summary"))),
-      tabPanel("Folders", DT::DTOutput(ns("Parent")))
+      tabPanel("Files", DT::DTOutput(ns("Main"))), 
+      # tabPanel("Summary",  DT::DTOutput(ns("Summary"))),
+      tabPanel("Folders", DT::DTOutput(ns("Parent"))),
+      tabPanel("Chart", shiny::uiOutput(outputId = ns('Chart')))
     )
     
-    # shinymaterial::material_tabs(
-    #   tabs = c(
-    #     "I Files" = "main_tab",
-    #     "II SubFolders" = "parent_tab",
-    #     "III Summary" = "summary_tab",
-    #     "IV Chart" = "chart_tab"
-    #   )
-    # ),
-    # shinymaterial::material_tab_content(
-    #   tab_id = "main_tab",
-    #   DT::DTOutput(ns("Main"))
-    # ),
-    # shinymaterial::material_tab_content(
-    #   tab_id = "parent_tab",
-    #   DT::DTOutput(ns("Parent"))
-    # ),
-    # shinymaterial::material_tab_content(
-    #   tab_id = "summary_tab",
-    #   DT::DTOutput(ns("Summary"))
-    # ),
-    # shinymaterial::material_tab_content(
-    #   tab_id = "chart_tab",
-    #   shinymaterial::material_card(title = "chart",
-    #                                shiny::uiOutput(outputId = ns('Chart'))
-    #   )
-    # )
   )
   
 }
@@ -81,7 +55,7 @@ mod_3_view_server <- function(input, output, session, r){
   
   output$Parent <- DT::renderDT({ 
     print("parent")
-    if(sum(!c('') %in% names(r$temp)) == 0 ){
+    if(sum(!c('parentName','parentID','Level','TotalByteSize','TotalFileCount') %in% names(r$temp)) == 0 ){
       r$ParentView <- DT::datatable( 
         ColView(r$temp[filter == TRUE, 
                        lapply(.SD,function(x) sum(x,na.rm=T)),
@@ -89,17 +63,15 @@ mod_3_view_server <- function(input, output, session, r){
                        .SDcols = c("TotalByteSize","TotalFileCount")], r, other = c('link','Owner','DateAccessed','Level','TotalByteSize','TotalFileCount') ) ,
         options = list(sDom  = '<"top">flrt<"bottom">ip'), # 'f' is the filter.
         escape = FALSE)      
-    }  else{
-      r$SummaryView
     }
     print("end parent")
     r$ParentView
   })
   
-  output$Summary <- DT::renderDT({
-    print("summaryView")
-    r$summaryView 
-  })
+  # output$Summary <- DT::renderDT({
+  #   print("summaryView")
+  #   r$summaryView 
+  # })
   
   output$Chart <- shiny::renderUI({
     print("ChartView")
@@ -116,7 +88,7 @@ mod_3_view_server <- function(input, output, session, r){
                             }
                           }
     )
-    
+
     tagList(r$ChartView)
   })
   

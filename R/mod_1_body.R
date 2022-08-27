@@ -19,7 +19,7 @@ mod_1_body_ui <- function(id){
       shinymaterial::material_column(
         width = 3,
         shinymaterial::material_modal(modal_id = "searchmodal",button_text = "Search",button_icon = "search",
-                                      mod_2_controller_ui("2_controller_ui_1")
+                                      mod_2_search_ui("2_search_ui_1")
         )),
       shinymaterial::material_column(
         width = 3,
@@ -41,7 +41,7 @@ mod_1_body_server <- function(input, output, session, r){
   print("RUN mod_1")
   
   callModule(mod_4_engine_server,"4_engine_ui_1", r)
-  callModule(mod_2_controller_server, "2_controller_ui_1", r)
+  callModule(mod_2_search_server, "2_search_ui_1", r)
   callModule(mod_2_2_subctlr_server, "2_2_subctlr_ui_1", r)
   callModule(mod_3_view_server, "3_view_ui_1", r)
   

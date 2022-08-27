@@ -8,6 +8,17 @@ quantile50 <- function(x,...) stats::quantile(x,0.50,...)
 quantile75 <- function(x,...) stats::quantile(x,0.75,...)
 quantile95 <- function(x,...) stats::quantile(x,0.95,...)
 
+#'@param d the default value
+#'@param y a list of alternative values
+#'@param z a list of filters
+#'#'@param na what to use if the both d and y filter is empty
+GetSelection <- function(d, y,z = y, na = z) {
+  if(sum(d %in% z)>0) return(d[d %in% z])
+  u <- unlist(lapply(y,function(x) x[x %in% z]))
+  if(length(u)>0) return(u)
+  na
+}
+
 # Auto-detect date and time
 #' @param x character vector with dates.
 #' @return a POSTIXct object with dates.

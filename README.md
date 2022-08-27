@@ -10,13 +10,15 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 <!-- badges: end -->
 
 The goal of MetadataApp is to enable better content management. The app
-let’s users create a batch file that will record metadata. After running
-the file, users can upload the results to get a tabular csv and
-visualise the output using the built-in functionalities of the app.
+lets users create a batch file that will record metadata. After running
+the script (or their own dir script), users can upload the text file to
+get a tabular csv and visualise the output using the built-in
+functionalities of the app.
 
 ## Installation
 
-The metadata app is currently not available for download.
+The metadata app is available from through GitHub
+(github.com/zackbk/metadata).
 
 Currently the only place to access this app is on shinyapps.io (and
 directly from the public GitHub repository).

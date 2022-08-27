@@ -38,7 +38,7 @@ usethis::use_package("bit64") # for integer bytes to work properly
 ## Add modules ----
 ## Create a module infrastructure in R/
 golem::add_module( name = "1_body" ) # Name of the module
-golem::add_module( name = "2_controller" ) # Name of the module
+golem::add_module( name = "2_search" ) # Name of the module
 golem::add_module( name = "2_2_subctlr" ) # Name of the module
 golem::add_module( name = "3_view" ) # Name of the module
 golem::add_module( name = "4_engine" ) # Name of the module
