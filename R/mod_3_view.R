@@ -14,8 +14,8 @@ mod_3_view_ui <- function(id){
       width = '100hh',
       tabPanel("Files", DT::DTOutput(ns("Main"))), 
       # tabPanel("Summary",  DT::DTOutput(ns("Summary"))),
-      tabPanel("Folders", DT::DTOutput(ns("Parent"))),
-      tabPanel("Chart", shiny::uiOutput(outputId = ns('Chart')))
+      tabPanel("Folders", DT::DTOutput(ns("Parent")))#,
+      #tabPanel("Chart", shiny::uiOutput(outputId = ns('Chart')))
     )
     
   )
@@ -58,9 +58,16 @@ mod_3_view_server <- function(input, output, session, r){
     if(sum(!c('parentName','parentID','Level','TotalByteSize','TotalFileCount') %in% names(r$temp)) == 0 ){
       r$ParentView <- DT::datatable( 
         ColView(r$temp[filter == TRUE, 
-                       lapply(.SD,function(x) sum(x,na.rm=T)),
+                       lapply(.SD,function(x) {
+                         if( ! lubridate::is.Date(x[1]) & !is.POSIXt(x[1]) ){
+                           sum(x,na.rm=T)
+                         } else{
+                           max(x,na.rm=T)
+                         }
+                         }),
                        by = c("parentName","parentID","Level"),
-                       .SDcols = c("TotalByteSize","TotalFileCount")], r, other = c('link','Owner','DateAccessed','Level','TotalByteSize','TotalFileCount') ) ,
+                       .SDcols = c("TotalByteSize","TotalFileCount",
+                                   "DateWritten")], r, other = c('link','Owner','DateWritten','Level','TotalByteSize','TotalFileCount') ) ,
         options = list(sDom  = '<"top">flrt<"bottom">ip'), # 'f' is the filter.
         escape = FALSE)      
     }
@@ -73,25 +80,25 @@ mod_3_view_server <- function(input, output, session, r){
   #   r$summaryView 
   # })
   
-  output$Chart <- shiny::renderUI({
-    print("ChartView")
-    r$ChartView <- lapply(r$chartPkg,
-                          function(x) {
-                            if(x %in% "ggplot2"){
-                              shiny::renderPlot(chartView(r, chartType = r$chartType, chartPkg = x))
-                            } else if (x %in% "ggiraph") {
-                              ggiraph::renderggiraph(chartView(r, chartType = r$chartType, chartPkg = x))
-                            } else if (x %in% "plotly") {
-                              plotly::renderPlotly(chartView(r, chartType = r$chartType, chartPkg = x))
-                            } else {
-                              htmltools::as.tags(chartView(r, chartType = r$chartType, chartPkg = x))
-                            }
-                          }
-    )
-
-    tagList(r$ChartView)
-  })
-  
+  # output$Chart <- shiny::renderUI({
+  #   print("ChartView")
+  #   r$ChartView <- lapply(r$chartPkg,
+  #                         function(x) {
+  #                           if(x %in% "ggplot2"){
+  #                             shiny::renderPlot(chartView(r, chartType = r$chartType, chartPkg = x))
+  #                           } else if (x %in% "ggiraph") {
+  #                             ggiraph::renderggiraph(chartView(r, chartType = r$chartType, chartPkg = x))
+  #                           } else if (x %in% "plotly") {
+  #                             plotly::renderPlotly(chartView(r, chartType = r$chartType, chartPkg = x))
+  #                           } else {
+  #                             htmltools::as.tags(chartView(r, chartType = r$chartType, chartPkg = x))
+  #                           }
+  #                         }
+  #   )
+  # 
+  #   tagList(r$ChartView)
+  # })
+  # 
   
   print("End mod_3")
 }

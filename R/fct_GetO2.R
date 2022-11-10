@@ -12,7 +12,7 @@
 #'@param WCA last written, creation, last accessed.
 #'@param temploc ?.
 #'@return O2Clean w
-GetO2 <- function(myDir = NULL, FName = NULL, WCA = NULL, temploc = NULL) {
+GetO2 <- function(myDir = NULL, FName = NULL, WCA = NULL, temploc = NULL, recursiveSum = FALSE) {
   # initialise libraries
   # library(bit64)
   # library(stringr)
@@ -164,24 +164,25 @@ GetO2 <- function(myDir = NULL, FName = NULL, WCA = NULL, temploc = NULL) {
     print(paste("start",Sys.time()))
     for(j in seq(max(x$Level) - 1, min(x$Level),-1)) { # start from lowest level work up.
       cat(paste('\r',max(x$Level)-1,"=>",j,"=>",min(x$Level),": started" ))
-      x <- x %>% dplyr::group_by(`parentID`) %>%
-        dplyr::mutate("TotalByteSize" = sum(ifelse(`parentID` == x$parentID[x$Level==(j+1)], x$TotalByteSize[x$Level==(j+1)], 0 ), na.rm=T ) ,
-                      "TotalFileCount" = sum(ifelse(`parentID` == x$parentID[x$Level==(j+1)], x$TotalFileCount[x$Level==(j+1)], 0), na.rm=T ) ,
-                      "AvgByteSize" = mean(ifelse(`parentID` == x$parentID[x$Level==(j+1)], x$TotalFileCount[x$Level==(j+1)], 0), na.rm=T ),
-                      "AvgCharacterLength" = mean(ifelse(`parentID` == x$parentID[x$Level==(j+1)], x$TotalFileCount[x$Level==(j+1)], 0), na.rm=T )
-        ) %>% dplyr::ungroup()
+      # x <- x %>% dplyr::group_by(`parentID`) %>%
+      #   dplyr::mutate("TotalByteSize" = sum(ifelse(`parentID` == x$parentID[x$Level==(j+1)], x$TotalByteSize[x$Level==(j+1)], 0 ), na.rm=T ) ,
+      #                 "TotalFileCount" = sum(ifelse(`parentID` == x$parentID[x$Level==(j+1)], x$TotalFileCount[x$Level==(j+1)], 0), na.rm=T ) #,
+      #                 #"AvgByteSize" = mean(ifelse(`parentID` == x$parentID[x$Level==(j+1)], x$TotalFileCount[x$Level==(j+1)], 0), na.rm=T ),
+      #                 #"AvgCharacterLength" = mean(ifelse(`parentID` == x$parentID[x$Level==(j+1)], x$TotalFileCount[x$Level==(j+1)], 0), na.rm=T )
+      #   ) %>% dplyr::ungroup()
+      
+      y <- data.table::copy(x)
+      y <- y[Level == j + 1, list(TBS = sum(TotalByteSize,na.rm=T),TFC=sum(TotalFileCount,na.rm=T)),by = c("parentName")]
+      x[y,`:=` ("TotalByteSize" = TBS,"TotalFileCount" = TFC) ,on=c("parentName==parentName")]
+      
+      # x[,`:=` ("TotalByteSize" = sum(ifelse(`parentID` == x$parentID[x$Level==(j+1)], x$TotalByteSize[x$Level==(j+1)], 0 ), na.rm=T ),
+      #          "TotalFileCount" = sum(ifelse(`parentID` == x$parentID[x$Level==(j+1)], x$TotalFileCount[x$Level==(j+1)], 0), na.rm=T )),by=c("parentID")]
       cat(paste('\r',max(x$Level)-1,"=>",j,"=>",min(x$Level),": fin'd" ))
     }
     print(paste("finish", Sys.time()))
     return(x)
   }
-  #O2Clean <- data.table::fread(temploc,"/clean_data.csv")
-  #temp <- RecursiveSum(O2Clean)
-  #usethis::use_data(O2Clean, overwrite = TRUE)
-  
   # step 3 : Rerun this and subsequent steps to update file icons etc.
- 
-  
   # Step 4: Combine multiple time-stamps
   
   # Reload data
@@ -205,16 +206,7 @@ GetO2 <- function(myDir = NULL, FName = NULL, WCA = NULL, temploc = NULL) {
     
   }
   
-  # O2List <- list(
-  #   data.table::fread(paste0(temploc,"/clean_datavW.csv"),data.table = T, colClasses = colClass),
-  #   data.table::fread(paste0(temploc,"/clean_datavC.csv"),data.table = T, colClasses = colClass),
-  #   data.table::fread(paste0(temploc,"/clean_datavA.csv"),data.table = T, colClasses = colClass))
-  # onCols <- names(O2List[[1]])[names(O2List[[1]]) %in% names(O2List[[2]]) & names(O2List[[1]]) %in% names(O2List[[3]])]
-  # onOrder <- order(c(dim(O2List[[1]])[1],dim(O2List[[2]])[1],dim(O2List[[3]])[1]))
-  # 
-  # O2Clean <- O2List[[onOrder[1]]][O2List[[onOrder[2]]][O2List[[onOrder[3]]],on= c(onCols)],on= c(onCols)]
-  
-  #data.table::fwrite(O2Clean,paste0(temploc,"/clean_datavCWA.csv"))
+  # if(recursiveSum==TRUE) O2Clean <- RecursiveSum(O2Clean)
   
   # Step 5: Clean up the formatting
   if(!exists("toDateTime") | !exists("addIcon")) source("R/fct_helpers.R") # functions in fct_helpers
@@ -225,9 +217,13 @@ GetO2 <- function(myDir = NULL, FName = NULL, WCA = NULL, temploc = NULL) {
   #   return(a)
   # }
   
-  if("DateAccessed" %in% names(O2Clean)) O2Clean[, DateAccessed := toDateTime(O2Clean$DateAccessed)]
-  if("DateWritten" %in% names(O2Clean)) O2Clean[, DateWritten := toDateTime(O2Clean$DateWritten)]
-  if("DateCreated" %in% names(O2Clean)) O2Clean[, DateCreated := toDateTime(O2Clean$DateCreated)]
+  # if("DateAccessed" %in% names(O2Clean)) O2Clean[, DateAccessed := toDateTime(O2Clean$DateAccessed)]
+  # if("DateWritten" %in% names(O2Clean)) O2Clean[, DateWritten := toDateTime(O2Clean$DateWritten)]
+  # if("DateCreated" %in% names(O2Clean)) O2Clean[, DateCreated := toDateTime(O2Clean$DateCreated)]
+  
+  date_cols <- grep("date",names(O2Clean),ignore.case = TRUE)
+  for(dc in date_cols) O2Clean[, (names(O2Clean)[dc]) := toDateTime(O2Clean[[names(O2Clean)[dc]]])]
+  
   if("Owner" %in% names(O2Clean))  O2Clean[, Owner := gsub("\\\\","/",Owner)]
   
   colOrder <- c("link","Owner","Extension","Level","DateCreated","DateAccessed","DateWritten",
@@ -240,6 +236,9 @@ GetO2 <- function(myDir = NULL, FName = NULL, WCA = NULL, temploc = NULL) {
   O2Clean <- addIcon(O2Clean)
   data.table::setcolorder(O2Clean, 
                           neworder = colOrder[colOrder %in% names(O2Clean)])
+  
+  
+  
   print("End GetO2")
   return(O2Clean)
 }

@@ -24,7 +24,8 @@ chartView <- function(rvalue = NULL, DataTab = rvalue$summaryView, chartType = "
   
   if(is.null(chartType)) chartType <- "auto"
   if(chartType == "auto") { # logic for auto selecting plot type
-    if(SDfun == "nothing" & is.null(xCol) ){ chartType <- "boxplot"
+    if(class(DataTab)[1] == "sf") { chartType <- "sf"
+	} else if(SDfun == "nothing" & is.null(xCol) ){ chartType <- "boxplot"
     } else if(SDfun != "nothing" & is.null(xCol) ) { chartType <- "col"
     } else if(SDfun == "nothing" & (!is.numeric(DataTab[[xCol[1]]])) & is.numeric(DataTab[[yCol[1]]])) { chartType <- "boxplot"
     } else if(SDfun == "nothing" & is.numeric(DataTab[[xCol[1]]]) & is.numeric(DataTab[[yCol[1]]])) { chartType <- "point"  
@@ -40,8 +41,9 @@ chartView <- function(rvalue = NULL, DataTab = rvalue$summaryView, chartType = "
   
   print(paste("chartType:",chartType))
   if(chartPkg == "ggiraph") {
-    if (chartType == "area") { PlotFun <- ggiraph::geom_area_interactive
-    } else if (chartType %in% c("bar","pie") ) { PlotFun <- ggiraph::geom_bar_interactive # UPDATED
+    if (chartType == "sf") { PlotFun <- ggiraph::geom_sf_interactive
+    } else if (chartType == "area") { PlotFun <- ggiraph::geom_area_interactive
+    } else if (chartType %in% c("bar","pie") ) { PlotFun <- ggiraph::geom_bar_interactive
     } else if (chartType == "col") { PlotFun <- ggiraph::geom_col_interactive 
     } else if (chartType == "boxplot") { PlotFun <- ggiraph::geom_boxplot_interactive 
     } else if (chartType == "point") { PlotFun <- ggiraph::geom_point_interactive
@@ -52,8 +54,9 @@ chartView <- function(rvalue = NULL, DataTab = rvalue$summaryView, chartType = "
     }
   } else if (chartPkg %in% c("ggplot2","plotly") ) {
     # base::get(paste0(chartPkg,"::"))
-    if (chartType == "area") { PlotFun <- ggplot2::geom_area 
-    } else if (chartType %in% c("bar","pie") ) { PlotFun <- ggplot2::geom_bar # UPDATED
+    if (chartType == "sf") { PlotFun <- ggplot2::geom_sf # NEW
+    } else if (chartType == "area") { PlotFun <- ggplot2::geom_area 
+    } else if (chartType %in% c("bar","pie") ) { PlotFun <- ggplot2::geom_bar
     } else if (chartType == "col") { PlotFun <- ggplot2::geom_col 
     } else if (chartType == "boxplot") { PlotFun <- ggplot2::geom_boxplot 
     } else if (chartType == "point") { PlotFun <- ggplot2::geom_point

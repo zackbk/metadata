@@ -91,8 +91,12 @@ mod_4_engine_server <- function(input, output, session, r){
       names(DT_temp) <- gsub("\\s","",names(DT_temp))
       if(sum(rda,csv,txt,xl)>0) {
         
-        if(i == 1 | csv > 0) { # if no data exists or comparison is off
-          DT <- data.table::rbindlist(l = list(DT,DT_temp),use.names = TRUE,fill = TRUE)
+        if(csv > 0) { # if no data exists or comparison is off
+          if(i==1) { 
+            DT <- DT_temp
+          } else{
+            DT <- data.table::rbindlist(l = list(DT,DT_temp),use.names = TRUE,fill = TRUE)
+          }
         } else{
           onCols <- names(DT_temp)[names(DT_temp) %in% names(DT)] # must be before idxPath & idxFile
           doNotCompare <- c("chng_type","chng_sum", "DateCreatedIndexDate", "DateWrittenIndexDate", "DateAccessedIndexDate")
@@ -165,7 +169,7 @@ mod_4_engine_server <- function(input, output, session, r){
     },
     content = function(fName) {
       print("Download Data")
-      data.table::fwrite(x = r$temp, file = fName)
+      data.table::fwrite(x = r$temp[filter == TRUE], file = fName)
     }
   )
   
