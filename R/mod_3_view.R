@@ -55,22 +55,30 @@ mod_3_view_server <- function(input, output, session, r){
   
   output$Parent <- DT::renderDT({ 
     print("parent")
-    if(sum(!c('parentName','parentID','Level','TotalByteSize','TotalFileCount') %in% names(r$temp)) == 0 ){
+    # if(sum(!c('parentName','parentID','Level','TotalByteSize','TotalFileCount') %in% names(r$temp)) == 0 ){
+    
+    byCols <- c("parentName","parentID","Level")
+    byCols <- byCols[byCols %in% names(r$temp)]
+    sdCols <- c("TotalByteSize","TotalFileCount","DateWritten")
+    sdCols <- sdCols[sdCols %in% names(r$temp)]
+    otherCols <- c('link','Owner','DateWritten','Level','TotalByteSize','TotalFileCount')
+    otherCols <- otherCols[otherCols %in% names(r$temp)]
       r$ParentView <- DT::datatable( 
         ColView(r$temp[filter == TRUE, 
-                       lapply(.SD,function(x) {
-                         if( ! lubridate::is.Date(x[1]) & !is.POSIXt(x[1]) ){
-                           sum(x,na.rm=T)
+                       lapply(.SD,function(w) {
+                         if( ! is.POSIXt(w) ){
+                           sum(as.numeric(w),na.rm=T)
                          } else{
-                           max(x,na.rm=T)
+                           max(w,na.rm=T)
                          }
                          }),
-                       by = c("parentName","parentID","Level"),
-                       .SDcols = c("TotalByteSize","TotalFileCount",
-                                   "DateWritten")], r, other = c('link','Owner','DateWritten','Level','TotalByteSize','TotalFileCount') ) ,
-        options = list(sDom  = '<"top">flrt<"bottom">ip'), # 'f' is the filter.
+                       by = c(byCols),
+                       .SDcols = c(sdCols)]
+                , r, other = otherCols ) ,
+        options = list(sDom  = '<"top">flrt<"bottom">ip'),
+        filter = "top", # 'f' is the filter.
         escape = FALSE)      
-    }
+    # }
     print("end parent")
     r$ParentView
   })

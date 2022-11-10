@@ -34,7 +34,7 @@ mod_2_search_ui <- function(id){
     #                               max = 25,
     #                               value = 25,step = 1),
     # filter :
-    shiny::checkboxInput(inputId = ns("ignoreCase"), label = "ignore_case", value = TRUE),
+    # shiny::checkboxInput(inputId = ns("ignoreCase"), label = "ignore_case", value = TRUE),
     shinyWidgets::pickerInput(inputId = ns("Owner"), label = "Owner",
                               choices = T3Empty$Owner,
                               inline = TRUE,
@@ -53,7 +53,7 @@ mod_2_search_server <- function(input, output, session, r){
   ns <- session$ns
   print("RUN mod_2")
   # Change to CORE DATA
-  # observeEvent(c(dim(r$O2),input$resetSearch),{ # run after upload
+  # observeEvent(c(dim(r$O2()),input$resetSearch),{ # run after upload
   #   print("run r$temp")
   #   if("DateWritten" %in% names(r$temp)){
   #     print("date written")
@@ -114,7 +114,7 @@ mod_2_search_server <- function(input, output, session, r){
   },ignoreInit = FALSE)
   # SEARCH
   observeEvent(c(input$searchString, 
-                 input$ignoreCase, 
+                 # input$ignoreCase, 
                  input$parentString,
                  input$extensionName,
                  input$Owner
@@ -124,7 +124,8 @@ mod_2_search_server <- function(input, output, session, r){
     print(dim(r$temp))
     r$temp <- SearchModel(x = r$temp, input)
     for(i in c("searchString","parentString",
-               "ignoreCase","Owner",
+               # "ignoreCase",
+               "Owner",
                # "writtenFrom","writtenTo"
                # ,"accessedFrom","accessedTo",
                # "createdFrom","createdTo",
@@ -137,7 +138,7 @@ mod_2_search_server <- function(input, output, session, r){
   
   observeEvent(c(input$searchString_reset), {
     print("reset")
-    r$temp <- data.table::copy(r$O2)
+    r$temp <- data.table::copy(r$O2())
     r$temp[, filter := TRUE]
   }, priority = 5)
   

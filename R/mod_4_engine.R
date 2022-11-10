@@ -26,7 +26,7 @@ mod_4_engine_server <- function(input, output, session, r){
   print("RUN mod_4")
   
   shiny::observeEvent(input$clear,{
-    r$O2 <- O2Empty
+    r$O2 <- function(j = 1) O2Empty
   },ignoreInit = TRUE)
   
   
@@ -35,9 +35,9 @@ mod_4_engine_server <- function(input, output, session, r){
     if(input$pickData %in% "auto"){
       # wait for data to be uploaded
     } else if(input$pickData %in% names(sampleDT)) {
-      r$O2 <- sampleDT[[input$pickData]]
+      r$j <- which(names(sampleDT)  %in% input$pickData)
     }
-    
+    print("end sample")
   },ignoreInit = FALSE,priority = 100)
   
   observeEvent(input$uploadIndex$datapath, {
@@ -123,6 +123,15 @@ mod_4_engine_server <- function(input, output, session, r){
     if('DateCreated' %in% names(DT)) DT[, DateCreated := toDateTime(DT$DateCreated)]
     if("Owner" %in% names(DT)) DT[, Owner := gsub("\\\\","/",Owner)]
     
+    if("TotalByteSize" %in% names(DT)){
+      DT[,Size := ""]
+      DT[TotalByteSize < 1e3,`:=` ('Size' = paste(round(TotalByteSize,0),"B"))]  
+      DT[TotalByteSize >= 1e3 & TotalByteSize < 1e6,`:=` ('Size' = paste(round(TotalByteSize/1e3,1),"KB"))]  
+      DT[TotalByteSize >= 1e6 & TotalByteSize < 1e9,`:=` ('Size' = paste(round(TotalByteSize/1e6,1),"MB"))]  
+      DT[TotalByteSize >= 1e9 & TotalByteSize < 1e12,`:=` ('Size' = paste(round(TotalByteSize/1e9,1),"GB"))]
+      DT[TotalByteSize >= 1e12,`:=` ('Size' = paste(round(TotalByteSize/1e12,1),"TB"))]
+    }
+    
     DT <- addIcon(DT)
     data.table::setcolorder(DT, neworder = colOrder[colOrder %in% names(DT)])
     
@@ -132,15 +141,16 @@ mod_4_engine_server <- function(input, output, session, r){
     shinyWidgets::updatePickerInput(session = session,inputId = 'pickData', selected = 'auto',
                                     choices = c('auto',names(sampleDT)))
     
-    r$O2 <- sampleDT[[j]]
+    r$j <- j
+    r$O2 <- function(j = r$j) sampleDT[[j]]
       
-    if(sum(!c('Type','ext',"TotalByteSize", "TotalFileCount",'Owner') %in% names(r$O2)) == 0){
+    if(sum(!c('Type','ext',"TotalByteSize", "TotalFileCount",'Owner') %in% names(r$O2())) == 0){
       
-    r$T2 <- r$O2[Type == "File", lapply(.SD,function(x) sum(x,na.rm=T)), by = ext, .SDcols = c("TotalByteSize", "TotalFileCount")][
+    r$T2 <- r$O2()[Type == "File", lapply(.SD,function(x) sum(x,na.rm=T)), by = ext, .SDcols = c("TotalByteSize", "TotalFileCount")][
       order(-TotalByteSize*TotalFileCount),
       ]
     
-    r$T3 <- r$O2[Type == "File", lapply(.SD,function(x) sum(x,na.rm=T)), by = Owner, .SDcols = c("TotalByteSize", "TotalFileCount")][
+    r$T3 <- r$O2()[Type == "File", lapply(.SD,function(x) sum(x,na.rm=T)), by = Owner, .SDcols = c("TotalByteSize", "TotalFileCount")][
       order(-TotalByteSize*TotalFileCount),
       ]
     }
@@ -148,14 +158,14 @@ mod_4_engine_server <- function(input, output, session, r){
   },ignoreInit = FALSE)
   
   
-  observeEvent(dim(r$O2),{
-    if(sum(!c('Type','ext',"TotalByteSize", "TotalFileCount",'Owner') %in% names(r$O2)) == 0){
+  observeEvent(dim(r$O2()),{
+    if(sum(!c('Type','ext',"TotalByteSize", "TotalFileCount",'Owner') %in% names(r$O2())) == 0){
       
-      r$T2 <- r$O2[Type == "File", lapply(.SD,function(x) sum(x,na.rm=T)), by = ext, .SDcols = c("TotalByteSize", "TotalFileCount")][
+      r$T2 <- r$O2()[Type == "File", lapply(.SD,function(x) sum(x,na.rm=T)), by = ext, .SDcols = c("TotalByteSize", "TotalFileCount")][
         order(-TotalByteSize*TotalFileCount),
         ]
       
-      r$T3 <- r$O2[Type == "File", lapply(.SD,function(x) sum(x,na.rm=T)), by = Owner, .SDcols = c("TotalByteSize", "TotalFileCount")][
+      r$T3 <- r$O2()[Type == "File", lapply(.SD,function(x) sum(x,na.rm=T)), by = Owner, .SDcols = c("TotalByteSize", "TotalFileCount")][
         order(-TotalByteSize*TotalFileCount),
         ]
     }
