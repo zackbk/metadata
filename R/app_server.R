@@ -59,7 +59,7 @@ app_server <- function( input, output, session ) {
   params$outputParent
   ```','Export.Rmd')
       
-      shinyWidgets::sendSweetAlert(session = session,title = "Result(s) saved to", text = fName)
+      shinyWidgets::sendSweetAlert(session = session,title = "Saving Results", text = "")
       
       rmarkdown::render(input = "Export.Rmd",
                         output_file = fName,
@@ -71,6 +71,8 @@ app_server <- function( input, output, session ) {
                         ),
                         envir = new.env(parent = parent.frame())
       )
+      
+      shinyWidgets::closeSweetAlert(session = session)
     }
   )
   

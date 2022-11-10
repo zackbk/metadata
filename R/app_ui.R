@@ -11,7 +11,7 @@ app_ui <- function(request) {
     # List the first level UI elements here 
     
     shinydashboard::dashboardPage(#skin = "purple",
-      shinydashboard::dashboardHeader(title = "Metadata lite v.0.1.0"),
+      shinydashboard::dashboardHeader(title = "Metadata lite"),
       shinydashboard::dashboardSidebar(width = '300px',
                                        tags$style(
                                          "#sidebarItemExpanded {
@@ -19,31 +19,43 @@ app_ui <- function(request) {
             overflow: auto;
             max-height: 100vh;
             max-width: 300px;
-            color:grey;
+            color:olive;
             text-align: center;
-        }"), disable = FALSE,collapsed = FALSE,
-                                       shinyWidgets::downloadBttn(outputId = "export",label = "V. export", style = "material-flat", color = "default", size = "md", block = FALSE),
-                                       # shinydashboard::box(width = 6, collapsible = TRUE,title = "Search",collapsed = FALSE,status = 'success', solidHeader = TRUE,
-                                       shinydashboard::box(width = 12, collapsible = TRUE,title = "I. Script Generator",collapsed = TRUE,status = 'primary', solidHeader = TRUE,background = 'navy',
-                                                           shiny::helpText(icon('info'),"script only works on windows"),
+            display: block;
+        }"),
+                                       shiny::tags$br(),
+                                       shinydashboard::box(width = 12, collapsible = TRUE,title = "1. Generate",collapsed = TRUE,status = 'success', solidHeader = FALSE,background = 'olive',
+                                                           shiny::helpText(icon('warning'),"only runs on windows"),
                                                            mod_4_1_script_ui("4_1_script_ui_1"),
-                                                           shiny::helpText(icon("info"),"use task scheduler to auto-run scripts")
+                                                           shiny::helpText(icon("info"),"task scheduler can auto-run scripts")
                                                            
                                        ),
-                                       shinydashboard::box(width = 12, collapsible = TRUE,title = "II. View Metadata",collapsed = FALSE,status = 'success', solidHeader = TRUE,background = 'teal',
+                                       
+                                       shinydashboard::box(width = 12, collapsible = TRUE,title = "2. Upload",collapsed = TRUE,status = 'success', solidHeader = FALSE,background = 'olive',
                                                            mod_4_engine_ui("4_engine_ui_1"),
-                                                           shiny::helpText("Converts dir output into a table"),
+                                                           shiny::helpText("Convert script output into a table"),
                                                            #shiny::helpText(icon("info"),"Data is temporarily stored on shinyapps.io servers"),
                                        ),
-                                       shinydashboard::box(width = 12, collapsible = TRUE,title = "III. Search Metadata",collapsed = TRUE,status = 'primary', solidHeader = TRUE,background = 'navy',
+                                       # shinydashboard::box(width = 12, collapsible = FALSE,background = 'olive',
+                                       #                     title = 
+                                       shinyWidgets::downloadBttn(outputId = "export",label = "HTML", icon = icon("file-export"),
+                                                                  style = "material-flat", color = "success", size = "md",block = FALSE),
+                                       # ),
+                                       mod_2_2_subctlr_ui("2_2_subctlr_ui_1"),
+                                       shinydashboard::box(width = 12, collapsible = FALSE,title = "3. Search", solidHeader = FALSE,background = 'olive',
                                                            mod_2_search_ui("2_search_ui_1")
                                        ),
-                                       mod_2_2_subctlr_ui("2_2_subctlr_ui_1"),
+                                       
+                                       
+                                       # shinydashboard::box(width = 6, collapsible = TRUE,title = "Search",collapsed = FALSE,status = 'success', solidHeader = TRUE,
+                                       
+                                       
+                                       
+                                       
                                        shiny::tags$text("Made with "),shiny::icon("heart",style = 'color: red;'),
                                        shiny::tags$metadata(' by Zack Kedida',style = 'max-width: 100px;'),
                                        shiny::tags$br(),
-                                       shiny::helpText("Each Shiny application runs in its own protected environment and access is always SSL encrypted.
-                                                       Session times out after 5 minutes of inactivity.")
+                                       shiny::helpText("Private app environment, SSL encrypted.")
                                        
       ),
       shinydashboard::dashboardBody(

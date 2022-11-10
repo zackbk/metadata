@@ -13,8 +13,8 @@ mod_4_1_script_ui <- function(id){
     HTML("<b> Create a batch script to index your files </b> <br>"),
     shinyWidgets::pickerInput(inputId = ns("timefield"),label = "1. timefield", choices = c("Creation", "Last Accessed", "Last Written"),
                               selected = c("Creation", "Last Written"), multiple = TRUE),
-    shiny::textInput(inputId = ns("drives"),label = "2. directory (or drive letter)",value = "H|N"),
-    shiny::textInput(inputId = ns("delimiter"),label = "2.i delimiter",value = "|"),
+    shiny::textInput(inputId = ns("drives"),label = "2. path (or drive letter)",value = "H|N"),
+    shiny::textInput(inputId = ns("delimiter"),label = "2.path delimiter",value = "|"),
     shinyWidgets::downloadBttn(outputId = ns("createScript"), label = "3. Export Script")
   )
 }

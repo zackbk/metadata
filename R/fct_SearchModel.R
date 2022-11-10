@@ -9,6 +9,11 @@
 # return x filtered, searched, and arranged based on input parameters (file-or-folder, date, search string, Level, Extension, parent search string)
 SearchModel <- function(x,input) {
   print("SearchModel")
+  if(is.null(input$ignoreCase) |  TRUE %in% input$ignoreCase) {
+    ic <- TRUE
+  } else{
+    ic <- FALSE
+  }
   x <- data.table::copy(x)
   x[, filter := TRUE]
   if (length(input$searchString) > 0) {
@@ -17,7 +22,7 @@ SearchModel <- function(x,input) {
           !stringr::str_detect(string = Name, 
                                pattern = stringr::regex(
                                  pattern = input$searchString, 
-                                 ignore_case = input$ignoreCase)),
+                                 ignore_case = ic)),
         filter := FALSE]
     }
   }
@@ -35,12 +40,12 @@ SearchModel <- function(x,input) {
     if("parentName" %in% names(x) &
        length(input$parentString)>0 & 
        input$parentString != "" & 
-       length(input$ignoreCase)>0) {
+       length(ic)>0) {
       x[(filter == TRUE) & 
           !stringr::str_detect(string = parentName, 
                                pattern = stringr::regex(
                                  pattern = input$parentString, 
-                                 ignore_case = input$ignoreCase)),
+                                 ignore_case = ic)),
         filter := FALSE]
       
     }

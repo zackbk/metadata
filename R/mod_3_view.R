@@ -67,7 +67,9 @@ mod_3_view_server <- function(input, output, session, r){
                          }),
                        by = c("parentName","parentID","Level"),
                        .SDcols = c("TotalByteSize","TotalFileCount",
-                                   "DateWritten")], r, other = c('link','Owner','DateWritten','Level','TotalByteSize','TotalFileCount') ) ,
+                                   "DateWritten")][
+                                     `:=` ('Size (MB)' = round(TotalByteSize/1e6,3))
+                                   ], r, other = c('link','Owner','DateWritten','Level','TotalByteSize','TotalFileCount') ) ,
         options = list(sDom  = '<"top">flrt<"bottom">ip'), # 'f' is the filter.
         escape = FALSE)      
     }
