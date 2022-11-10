@@ -23,8 +23,6 @@ mod_2_2_subctlr_ui <- function(id){
                                                   selected = c("link","Owner","ext","DateAccessed","DateCreated","DateWritten","TotalByteSize","parentName"), multiple = TRUE),
                         shinyWidgets::downloadBttn(outputId = ns("export"),label = "HTML", icon = icon("file-export"),
                                                    style = "material-flat", color = "success", size = "md",block = FALSE),
-                        
-                        
                         # shinyWidgets::pickerInput(inputId = ns("xCol"), label = "X", choices = c(O2Names$cols_numeric,O2Names$cols_string,O2Names$cols_date), selected = "Level", multiple = FALSE),
                         # shinyWidgets::pickerInput(inputId = ns("yCol"), label = "Y", choices = c(O2Names$cols_numeric,O2Names$cols_string,O2Names$cols_date), selected = "TotalByteSize"),
                         # shinyWidgets::pickerInput(inputId = ns("yNumCols"), label = "Zs", choices = c(O2Names$cols_numeric), selected = "TotalFileCount", multiple = TRUE),
@@ -150,7 +148,6 @@ mod_2_2_subctlr_server <-  function(input, output, session, r){
   #     r$summaryInput[[i]] <- unlist(input[[i]])
   #   }
   # }, priority = 10)
-  
   # shiny::observeEvent(c(input$xCol,input$yCol,input$yNumCols,input$SDfun,input$groupBy,input$SDunit,r$temp),{
   #   print("run summaryInput")
   #   if(!is.null(r$summaryInput) ){

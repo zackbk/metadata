@@ -9,7 +9,6 @@ app_ui <- function(request) {
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # List the first level UI elements here 
-    
     shinydashboard::dashboardPage(skin = "green",
       header = shinydashboard::dashboardHeader(title = "Metadata lite",disable = FALSE),
       sidebar = shinydashboard::dashboardSidebar(width = '300px',collapsed = TRUE,
@@ -30,7 +29,6 @@ app_ui <- function(request) {
                                                            shiny::helpText(icon("info"),"task scheduler can auto-run scripts")
                                                            
                                        ),
-                                       
                                        shinydashboard::box(width = 12, collapsible = TRUE,title = "2. Upload",collapsed = TRUE,background = 'olive',
                                                            mod_4_engine_ui("4_engine_ui_1"),
                                                            shiny::helpText("Convert script output into a table"),
@@ -43,7 +41,6 @@ app_ui <- function(request) {
                                        shinydashboard::box(width = 12, collapsible = FALSE,title = "3. Search", solidHeader = FALSE,background = 'olive',
                                                            mod_2_search_ui("2_search_ui_1")
                                        ),
-                                       
                                        # shinydashboard::box(width = 6, collapsible = TRUE,title = "Search",collapsed = FALSE,status = 'success', solidHeader = TRUE,
                                        
                                        
