@@ -49,7 +49,7 @@ mod_4_engine_server <- function(input, output, session, r){
     iMax <- length(input$uploadIndex$datapath)
     for(i in 1:length(input$uploadIndex$datapath) ) {
       shinyWidgets::updateProgressBar(session = session,id = ns("runtime"), value = 10 + 80*((i-1)/iMax)) 
-      rm(DT_temp)
+      if(exists("DT_temp")) rm(DT_temp)
       txt <- grepl(pattern = "\\.txt$",x = input$uploadIndex$datapath[i],ignore.case = T) # text file is raw file index
       rda <- grepl(pattern = "\\.rda$",x = input$uploadIndex$datapath[i],ignore.case = T)
       csv <-  grepl(pattern = "\\.csv$",x = input$uploadIndex$datapath[i],ignore.case = T)
@@ -62,7 +62,7 @@ mod_4_engine_server <- function(input, output, session, r){
         tryCatch(expr = {
           DT_temp <- GetO2(myDir = input$uploadIndex$datapath[i],FName = input$uploadIndex$name[i])
         }, error = function(e) {
-          warning("GetO2 error")
+          print("GetO2 error")
           DT_temp <- O2Empty
           print(e)
         })
@@ -98,14 +98,18 @@ mod_4_engine_server <- function(input, output, session, r){
             DT <- data.table::rbindlist(l = list(DT,DT_temp),use.names = TRUE,fill = TRUE)
           }
         } else{
-          onCols <- names(DT_temp)[names(DT_temp) %in% names(DT)] # must be before idxPath & idxFile
-          doNotCompare <- c("chng_type","chng_sum", "DateCreatedIndexDate", "DateWrittenIndexDate", "DateAccessedIndexDate")
-          onCols <- onCols[!onCols %in% doNotCompare]
-          
-          rbL <- function() list(DT_temp[DT,on=c(onCols)],DT_temp[!DT,on=c(onCols)])
-          DT <- data.table::rbindlist(l = rbL(),
-                                      use.names = TRUE,
-                                      fill = TRUE)
+          if(length(DT)==0){
+            DT <- DT_temp
+          } else{
+            onCols <- names(DT_temp)[names(DT_temp) %in% names(DT)] # must be before idxPath & idxFile
+            doNotCompare <- c("chng_type","chng_sum", "DateCreatedIndexDate", "DateWrittenIndexDate", "DateAccessedIndexDate")
+            onCols <- onCols[!onCols %in% doNotCompare]
+            
+            rbL <- function() list(DT_temp[DT,on=c(onCols)],DT_temp[!DT,on=c(onCols)])
+            DT <- data.table::rbindlist(l = rbL(),
+                                        use.names = TRUE,
+                                        fill = TRUE)
+          }
         }
       }
     }

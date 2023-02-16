@@ -98,35 +98,37 @@ GetO2 <- function(myDir = NULL, FName = NULL, WCA = NULL, temploc = NULL, recurs
     O2SubDirFullPath <- paste0(O2Dir[O2SubDirParentID],"\\",O2SubDirName)
     
     
+    O2Data <- plyr::rbind.fill(tryCatch(data.frame("parentName" = O2Dir[O2FileParentID],
+                                                   "parentID" = O2FileParentID,
+                                                   "DateTime" = O2FileDateTime,
+                                                   "Owner" = O2FileOwner,
+                                                   "Name" = O2FileName,
+                                                   "ID" = O2FileID,
+                                                   "Extension" = O2FileExt,
+                                                   "CharacterLength" = O2FileNChars,
+                                                   "Level" = O2FileLevel,
+                                                   "Type" = "File",
+                                                   "TotalByteSize" = O2FileBytes,
+                                                   "TotalFileCount" = 1,
+                                                   "pathString" = O2FileFullPath
+    ),error = function(e) {
+      data.frame()
+    }), tryCatch(data.frame('parentName' = O2Dir[O2SubDirParentID],
+                            "parentID" = O2SubDirParentID,
+                            "DateTime" = O2SubDirDateTime,
+                            "Owner" = O2SubDirOwner,
+                            "Name" = O2SubDirName,
+                            "ID" = O2SubDirID,
+                            "Level" = O2SubDirLevel,
+                            "DirectFileCount" = O2SubDirNFiles, # O2DirNums
+                            "DirectByteSize" = O2SubDirNFiles, # Direct Files
+                            "Type" = "Folder",
+                            "TotalByteSize" = 0, # Must be cumulative (will be recursively done in next step)
+                            "TotalFileCount" = 0,
+                            "pathString" = O2SubDirFullPath),error = function(e) {
+                              data.frame()
+                            })) # Must be cumulative (will be recursively done in next step)
     
-    O2Data <- plyr::rbind.fill(data.frame("parentName" = O2Dir[O2FileParentID],
-                                          "parentID" = O2FileParentID,
-                                          "DateTime" = O2FileDateTime,
-                                          "Owner" = O2FileOwner,
-                                          "Name" = O2FileName,
-                                          "ID" = O2FileID,
-                                          "Extension" = O2FileExt,
-                                          "CharacterLength" = O2FileNChars,
-                                          "Level" = O2FileLevel,
-                                          "Type" = "File",
-                                          "TotalByteSize" = O2FileBytes,
-                                          "TotalFileCount" = 1,
-                                          "pathString" = O2FileFullPath
-    ),
-    
-    data.frame('parentName' = O2Dir[O2SubDirParentID],
-               "parentID" = O2SubDirParentID,
-               "DateTime" = O2SubDirDateTime,
-               "Owner" = O2SubDirOwner,
-               "Name" = O2SubDirName,
-               "ID" = O2SubDirID,
-               "Level" = O2SubDirLevel,
-               "DirectFileCount" = O2SubDirNFiles, # O2DirNums
-               "DirectByteSize" = O2SubDirNFiles, # Direct Files
-               "Type" = "Folder",
-               "TotalByteSize" = 0, # Must be cumulative (will be recursively done in next step)
-               "TotalFileCount" = 0,
-               "pathString" = O2SubDirFullPath)) # Must be cumulative (will be recursively done in next step)
     
     DateTime <- ifelse(substring(WCA[i],1,1)=="W","DateWritten",ifelse(substring(WCA[i],1,1)=="C","DateCreated","DateAccessed"))
     print("DateTime")
@@ -199,9 +201,9 @@ GetO2 <- function(myDir = NULL, FName = NULL, WCA = NULL, temploc = NULL, recurs
       O2temp <- data.table::fread(O2Tables[i], data.table = T, colClasses = colClass)
       onCols <- names(O2temp)[names(O2temp) %in% names(O2Clean)]
       O2Clean <- data.table::rbindlist(l = list(O2temp[O2Clean,on=c(onCols)],
-                                    O2temp[!O2Clean,on=c(onCols)]),
-                           use.names = TRUE,
-                           fill = TRUE)
+                                                O2temp[!O2Clean,on=c(onCols)]),
+                                       use.names = TRUE,
+                                       fill = TRUE)
     }
     
   }
